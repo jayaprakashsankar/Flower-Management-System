@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Join FloraChain — Sign Up / Login</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="assets/logo.png"/>
+  <style>
+    body { background:var(--bg); }
+    .auth-layout {
+      display:grid; grid-template-columns:1fr 1fr; min-height:100vh;
+    }
+    .auth-side {
+      background:linear-gradient(160deg,var(--green-dark) 0%,#1B5E20 100%);
+      padding:3rem; display:flex; flex-direction:column; justify-content:space-between;
+      position:sticky; top:0; height:100vh;
+    }
+    .auth-side .side-logo { display:flex; align-items:center; gap:.6rem; font-weight:900; font-size:1.3rem; color:#fff; }
+    .auth-side .side-logo img { width:38px; height:38px; border-radius:8px; }
+    .auth-side .side-title { font-size:1.8rem; font-weight:900; color:#fff; line-height:1.25; margin-bottom:.75rem; }
+    .auth-side .side-sub { font-size:.88rem; color:rgba(255,255,255,.7); line-height:1.7; }
+    .side-feature { display:flex; align-items:center; gap:.75rem; margin-bottom:.85rem; }
+    .side-feature .sf-icon { width:36px; height:36px; border-radius:var(--radius-md); background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1rem; }
+    .side-feature .sf-text { font-size:.83rem; color:rgba(255,255,255,.8); }
+    .side-testimonial { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); border-radius:var(--radius-xl); padding:1.25rem; }
+    .side-testimonial .st-text { font-size:.85rem; color:rgba(255,255,255,.85); font-style:italic; line-height:1.7; margin-bottom:.5rem; }
+    .side-testimonial .st-name { font-size:.78rem; color:rgba(255,255,255,.55); font-weight:600; }
+
+    .auth-main { display:flex; align-items:flex-start; justify-content:center; padding:2.5rem 2rem; overflow-y:auto; min-height:100vh; }
+    .auth-box { width:100%; max-width:520px; }
+    .auth-tabs { display:flex; border-bottom:2px solid var(--border); margin-bottom:2rem; }
+    .auth-tab { flex:1; text-align:center; padding:.75rem; font-weight:600; font-size:.9rem; color:var(--text-3); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; transition:all var(--t-fast); }
+    .auth-tab.active { color:var(--green-dark); border-bottom-color:var(--green); }
+
+    /* wizard steps bar */
+    .wiz-bar { display:flex; align-items:center; margin-bottom:2.5rem; }
+    .wiz-step { display:flex; flex-direction:column; align-items:center; flex:1; }
+    .wiz-circle {
+      width:34px; height:34px; border-radius:50%; border:2px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-size:.8rem; font-weight:700; color:var(--text-4); background:#fff;
+      transition:all var(--t-normal); position:relative; z-index:1;
+    }
+    .wiz-circle.done   { background:var(--green); border-color:var(--green); color:#fff; }
+    .wiz-circle.active { border-color:var(--green); color:var(--green-dark); box-shadow:0 0 0 4px var(--green-glow); }
+    .wiz-lbl { font-size:.62rem; font-weight:700; margin-top:.4rem; color:var(--text-4); text-align:center; }
+    .wiz-lbl.active { color:var(--green-dark); }
+    .wiz-lbl.done   { color:var(--text-3); }
+    .wiz-line { flex:1; height:2px; background:var(--border); margin-bottom:20px; transition:background var(--t-slow); }
+    .wiz-line.done { background:var(--green); }
+
+    /* Flower select grid */
+    .flower-grid { display:flex; flex-wrap:wrap; gap:.6rem; }
+    .flower-chip { padding:.45rem 1rem; border-radius:var(--radius-full); border:1.5px solid var(--border); background:#fff; font-size:.8rem; font-weight:600; color:var(--text-2); cursor:pointer; transition:all var(--t-fast); }
+    .flower-chip:hover { border-color:var(--green); color:var(--green-dark); }
+    .flower-chip.sel  { background:var(--green-xlight); border-color:var(--green); color:var(--green-dark); }
+
+    /* ── Login Role Selector ── */
+    .login-role-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:.5rem; margin-bottom:1.25rem; }
+    .login-role-card {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:.3rem; padding:.65rem .25rem;
+      border:2px solid var(--border); border-radius:var(--radius-lg);
+      background:#fff; cursor:pointer; transition:all var(--t-fast);
+      position:relative; overflow:hidden;
+    }
+    .login-role-card:hover { border-color:var(--green); background:var(--green-xlight); transform:translateY(-2px); }
+    .login-role-card.selected { border-color:var(--green); background:var(--green-xlight); box-shadow:0 0 0 3px var(--green-glow); }
+    .login-role-card .lrc-icon { font-size:1.35rem; }
+    .login-role-card .lrc-name { font-size:.62rem; font-weight:700; color:var(--text-2); text-align:center; line-height:1.2; }
+    .login-role-card.selected .lrc-name { color:var(--green-dark); }
+    .login-role-card .lrc-check {
+      position:absolute; top:4px; right:4px;
+      width:16px; height:16px; border-radius:50%;
+      background:var(--green); color:#fff;
+      font-size:.55rem; display:none;
+      align-items:center; justify-content:center; font-weight:900;
+    }
+    .login-role-card.selected .lrc-check { display:flex; }
+
+    /* OTP field */
+    .otp-row { display:flex; gap:.5rem; }
+    .otp-input { flex:1; text-align:center; font-size:1.25rem; font-weight:700; letter-spacing:.1em; border:1.5px solid var(--border); border-radius:var(--radius-md); padding:.65rem .5rem; }
+    .otp-input:focus { border-color:var(--green); box-shadow:0 0 0 3px var(--green-glow); }
+
+    /* success */
+    .success-wrap { text-align:center; padding:2rem 0; }
+    .success-circle { width:100px; height:100px; border-radius:50%; background:var(--green-xlight); border:3px solid var(--green); display:flex; align-items:center; justify-content:center; font-size:3rem; margin:0 auto 1.5rem; animation:bounceIn .6s cubic-bezier(.34,1.56,.64,1) both; }
+    @keyframes bounceIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+    @media(max-width:768px) {
+      .auth-layout { grid-template-columns:1fr; }
+      .auth-side { display:none; }
+      .auth-main { padding:2rem 1rem; min-height:auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Back nav -->
+<div style="position:fixed;top:0;left:0;right:0;height:52px;background:#fff;border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:0 1.25rem;gap:1rem;">
+  <a href="index.html" class="btn btn-ghost btn-sm" style="gap:.35rem;">← Back</a>
+  <a href="index.html" class="logo-mark" style="font-size:1rem;"><img src="assets/logo.png" alt="" style="width:28px;height:28px;border-radius:6px;"><span class="logo-text">Flora<span style="color:var(--coral);">Chain</span></span></a>
+</div>
+
+<div style="height:52px;"></div>
+
+<div class="auth-layout">
+  <!-- LEFT SIDE PANEL -->
+  <div class="auth-side">
+    <div>
+      <div class="side-logo"><img src="assets/logo.png" alt=""/>FloraChain</div>
+      <div style="height:2.5rem;"></div>
+      <div class="side-title">உங்கள் மலர் வியாபாரத்தை இணையத்தில் கொண்டு வாருங்கள்!</div>
+      <div class="side-sub mb-6">Join India's most trusted floral supply chain marketplace and start trading smarter today.</div>
+      <div class="side-feature"><div class="sf-icon">🌸</div><div class="sf-text"><strong style="color:#fff;">Direct Market Access</strong> — Sell flowers directly to agents and stores, no middlemen.</div></div>
+      <div class="side-feature"><div class="sf-icon">💰</div><div class="sf-text"><strong style="color:#fff;">Transparent Ledger</strong> — Real-time income, expenses and profit tracking.</div></div>
+      <div class="side-feature"><div class="sf-icon">🚚</div><div class="sf-text"><strong style="color:#fff;">Live Delivery Tracking</strong> — GPS-linked order tracking from farm to store.</div></div>
+      <div class="side-feature"><div class="sf-icon">📊</div><div class="sf-text"><strong style="color:#fff;">Market Intelligence</strong> — Daily price trends and regional demand data.</div></div>
+    </div>
+    <div class="side-testimonial">
+      <div class="st-text">"FloraChain increased my farm income by 35% in the first season. I can now sell directly to top stores in Bangalore without a single phone call."</div>
+      <div class="st-name">— Ramesh K., Rose Farmer, Mysuru</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: FORM PANEL -->
+  <div class="auth-main">
+    <div class="auth-box">
+      <!-- Tabs: Login / Create Account -->
+      <div class="auth-tabs" id="authTabs">
+        <div class="auth-tab" id="tabLogin" onclick="showLogin()">Sign In</div>
+        <div class="auth-tab active" id="tabReg" onclick="showReg()">Create Account</div>
+      </div>
+
+      <!-- ══ LOGIN FORM ══ -->
+      <div id="loginForm">
+        <h2 style="margin-bottom:.25rem;">Welcome back 👋</h2>
+        <p class="text-muted text-sm mb-5">Sign in to your FloraChain account.</p>
+
+        <!-- Role selector -->
+        <div class="form-label mb-2">நீங்கள் யார்? — Select Your Role</div>
+        <div class="login-role-grid" id="loginRoleGrid">
+          <div class="login-role-card" data-role="farmer" onclick="selectLoginRole(this)">
+            <div class="lrc-check">✓</div>
+            <div class="lrc-icon">🌾</div>
+            <div class="lrc-name">Farmer<br/><span style="font-weight:400;color:var(--text-3);">விவசாயி</span></div>
+          </div>
+          <div class="login-role-card" data-role="agent" onclick="selectLoginRole(this)">
+            <div class="lrc-check">✓</div>
+            <div class="lrc-icon">🤝</div>
+            <div class="lrc-name">Agent<br/><span style="font-weight:400;color:var(--text-3);">ஏஜென்ட்</span></div>
+          </div>
+          <div class="login-role-card" data-role="storeowner" onclick="selectLoginRole(this)">
+            <div class="lrc-check">✓</div>
+            <div class="lrc-icon">🏪</div>
+            <div class="lrc-name">Store<br/><span style="font-weight:400;color:var(--text-3);">ஸ்டோர்</span></div>
+          </div>
+          <div class="login-role-card" data-role="vehicleowner" onclick="selectLoginRole(this)">
+            <div class="lrc-check">✓</div>
+            <div class="lrc-icon">🚛</div>
+            <div class="lrc-name">Vehicle<br/><span style="font-weight:400;color:var(--text-3);">வாகனம்</span></div>
+          </div>
+          <div class="login-role-card" data-role="driver" onclick="selectLoginRole(this)">
+            <div class="lrc-check">✓</div>
+            <div class="lrc-icon">🚚</div>
+            <div class="lrc-name">Driver<br/><span style="font-weight:400;color:var(--text-3);">டிரைவர்</span></div>
+          </div>
+          <div class="login-role-card" data-role="admin" onclick="selectLoginRole(this)">
+            <div class="lrc-check">✓</div>
+            <div class="lrc-icon">⚙️</div>
+            <div class="lrc-name">Admin<br/><span style="font-weight:400;color:var(--text-3);">நிர்வாகி</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div class="form-group">
+            <label class="form-label">Mobile or Email</label>
+            <input class="form-input" type="text" id="loginIdentifier" placeholder="98765 43210 or email@example.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-group">
+              <input class="form-input" type="password" placeholder="Enter your password" id="loginPwd"/>
+              <button type="button" class="input-suffix" style="background:none;border:none;cursor:pointer;" onclick="togglePwd('loginPwd',this)">👁</button>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <label class="checkbox-label" style="font-size:.83rem;"><input type="checkbox"/> Remember me</label>
+            <a href="javascript:void(0)" onclick="showToast('Password reset link sent to email/mobile.','info')" class="text-sm" style="color:var(--green-dark);">Forgot password?</a>
+          </div>
+          <button class="btn btn-primary btn-lg w-full mt-2" id="loginBtn" onclick="doLogin()">Sign In →</button>
+          <div class="divider-text">OR</div>
+          <button class="btn btn-outline btn-lg w-full" onclick="showToast('OTP code sent to your mobile. Please enter it to login.','success')">📱 Login with OTP</button>
+        </div>
+        <div class="text-center mt-4 text-sm text-muted">Don't have an account? <a href="#" onclick="showReg()" style="color:var(--green-dark);font-weight:600;">Create one →</a></div>
+      </div>
+
+      <!-- ══ REGISTRATION WIZARD ══ -->
+      <div id="regForm" style="display:none;">
+        <h2 style="margin-bottom:.15rem;">Join FloraChain 🌸</h2>
+        <p class="text-muted text-sm mb-4">Create your account in a few simple steps.</p>
+
+        <!-- Step progress bar -->
+        <div class="wiz-bar" id="wizBar">
+          <div class="wiz-step">
+            <div class="wiz-circle active" id="wc1">1</div>
+            <div class="wiz-lbl active" id="wl1">Role</div>
+          </div>
+          <div class="wiz-line" id="wline1"></div>
+          <div class="wiz-step">
+            <div class="wiz-circle" id="wc2">2</div>
+            <div class="wiz-lbl" id="wl2">Profile</div>
+          </div>
+          <div class="wiz-line" id="wline2"></div>
+          <div class="wiz-step">
+            <div class="wiz-circle" id="wc3">3</div>
+            <div class="wiz-lbl" id="wl3">KYC</div>
+          </div>
+          <div class="wiz-line" id="wline3"></div>
+          <div class="wiz-step">
+            <div class="wiz-circle" id="wc4">4</div>
+            <div class="wiz-lbl" id="wl4">Business</div>
+          </div>
+          <div class="wiz-line" id="wline4"></div>
+          <div class="wiz-step">
+            <div class="wiz-circle" id="wc5">5</div>
+            <div class="wiz-lbl" id="wl5">Done</div>
+          </div>
+        </div>
+
+        <!-- STEP 1: Role -->
+        <div class="reg-step active" id="step1">
+          <p class="font-semi mb-3">நீங்கள் யார்? — What is your role?</p>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;" id="roleGrid">
+            <div class="role-card" data-role="farmer" onclick="selectRole(this)"><div class="check-mark">✓</div><div class="role-icon">🌾</div><div class="role-name">Farmer</div><div class="role-desc">விவசாயி</div></div>
+            <div class="role-card" data-role="agent" onclick="selectRole(this)"><div class="check-mark">✓</div><div class="role-icon">🤝</div><div class="role-name">Agent</div><div class="role-desc">ஏஜென்ட்</div></div>
+            <div class="role-card" data-role="storeowner" onclick="selectRole(this)"><div class="check-mark">✓</div><div class="role-icon">🏪</div><div class="role-name">Store Owner</div><div class="role-desc">ஸ்டோர் ஓனர்</div></div>
+            <div class="role-card" data-role="vehicleowner" onclick="selectRole(this)"><div class="check-mark">✓</div><div class="role-icon">🚛</div><div class="role-name">Vehicle Owner</div><div class="role-desc">வாகன ஓட்டி</div></div>
+            <div class="role-card" data-role="driver" onclick="selectRole(this)"><div class="check-mark">✓</div><div class="role-icon">🚚</div><div class="role-name">Driver</div><div class="role-desc">டிரைவர்</div></div>
+          </div>
+          <button class="btn btn-primary btn-lg w-full mt-6" onclick="goStep(2)">Continue →</button>
+        </div>
+
+        <!-- STEP 2: Basic Info -->
+        <div class="reg-step" id="step2">
+          <p class="font-semi mb-4">அடிப்படை விவரங்கள் — Basic Details</p>
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">First Name</label><input class="form-input" placeholder="முதல் பெயர்"/></div>
+              <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" placeholder="கடைசி பெயர்"/></div>
+            </div>
+            <div class="form-group"><label class="form-label">Gender / பாலினம்</label><select class="form-select"><option value="">Select gender</option><option>Male / ஆண்</option><option>Female / பெண்</option><option>Other</option></select></div>
+            <div class="form-group">
+              <label class="form-label">Mobile Number / மொபைல் எண்</label>
+              <div style="display:flex;gap:.5rem;">
+                <input class="form-input" type="tel" placeholder="98765 43210" style="flex:1;" id="mobileField"/>
+                <button class="btn btn-primary btn-sm" onclick="sendOTP()" id="otpBtn" style="white-space:nowrap;">Send OTP</button>
+              </div>
+            </div>
+            <div id="otpSection" style="display:none;">
+              <label class="form-label mb-2" style="display:block;">Enter OTP</label>
+              <div class="otp-row mb-2">
+                <input class="otp-input form-input" maxlength="1" type="number"/>
+                <input class="otp-input form-input" maxlength="1" type="number"/>
+                <input class="otp-input form-input" maxlength="1" type="number"/>
+                <input class="otp-input form-input" maxlength="1" type="number"/>
+                <input class="otp-input form-input" maxlength="1" type="number"/>
+                <input class="otp-input form-input" maxlength="1" type="number"/>
+              </div>
+              <div class="text-xs text-muted">Didn't receive? <a href="#" style="color:var(--green-dark);">Resend OTP</a></div>
+            </div>
+            <div class="form-group"><label class="form-label">Email ID</label><input class="form-input" type="email" placeholder="email@example.com"/></div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-group">
+                <input class="form-input" type="password" placeholder="Minimum 8 characters" id="regPwd" oninput="checkPwd(this.value)"/>
+                <button type="button" class="input-suffix" style="background:none;border:none;cursor:pointer;" onclick="togglePwd('regPwd',this)">👁</button>
+              </div>
+              <div class="pwd-bars" id="pwdBars"><div class="pwd-bar"></div><div class="pwd-bar"></div><div class="pwd-bar"></div><div class="pwd-bar"></div></div>
+              <div class="pwd-text text-muted" id="pwdStrengthText">Password strength</div>
+            </div>
+            <div class="form-group"><label class="form-label">Confirm Password</label><input class="form-input" type="password" placeholder="Re-enter password"/></div>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button class="btn btn-outline flex-1" onclick="goStep(1)">← Back</button>
+            <button class="btn btn-primary flex-1" onclick="goStep(3)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: KYC -->
+        <div class="reg-step" id="step3">
+          <p class="font-semi mb-4">KYC & முகவரி — Address & Verification</p>
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="form-group"><label class="form-label">Full Address / முழு முகவரி</label><textarea class="form-textarea" placeholder="Door No., Street, Area, City, State" rows="3"></textarea></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Pincode</label><input class="form-input" placeholder="600001" maxlength="6"/></div>
+              <div class="form-group"><label class="form-label">State</label><select class="form-select"><option>Tamil Nadu</option><option>Karnataka</option><option>Kerala</option><option>Andhra Pradesh</option><option>Maharashtra</option><option>Other</option></select></div>
+            </div>
+            <div class="form-group"><label class="form-label">Aadhaar Number / ஆதார் எண்</label><input class="form-input" placeholder="XXXX XXXX XXXX" maxlength="14" oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{4})(?=\d)/g,'$1 ')"/></div>
+            <div>
+              <div class="form-label mb-2">Aadhaar Card Upload / ஆதார் கார்டு அப்லோட்</div>
+              <div class="form-row">
+                <label class="kyc-upload-box">
+                  <input type="file" accept="image/*" onchange="previewFile(this,'prev1')"/>
+                  <div id="prev1"><div style="font-size:2rem;margin-bottom:.4rem;">📷</div><div class="font-semi text-sm">Front Side</div><div class="text-xs text-muted mt-1">முன் பக்கம் · Camera or Gallery</div></div>
+                </label>
+                <label class="kyc-upload-box">
+                  <input type="file" accept="image/*" onchange="previewFile(this,'prev2')"/>
+                  <div id="prev2"><div style="font-size:2rem;margin-bottom:.4rem;">📷</div><div class="font-semi text-sm">Back Side</div><div class="text-xs text-muted mt-1">பின் பக்கம் · Camera or Gallery</div></div>
+                </label>
+              </div>
+            </div>
+            <div id="dlSection" style="display:none;">
+              <div class="form-label mb-2 mt-2">Driving License / ஓட்டுனர் உரிமம் (Driver only)</div>
+              <div class="form-group mb-2"><label class="form-label">DL Number</label><input class="form-input" placeholder="KA-09-20XX-XXXXXX"/></div>
+              <label class="kyc-upload-box">
+                <input type="file" accept="image/*"/>
+                <div style="font-size:2rem;margin-bottom:.4rem;">🪪</div>
+                <div class="font-semi text-sm">Upload Driving License</div>
+                <div class="text-xs text-muted mt-1">Front side only</div>
+              </label>
+            </div>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button class="btn btn-outline flex-1" onclick="goStep(2)">← Back</button>
+            <button class="btn btn-primary flex-1" onclick="goStep(4)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Business Preferences -->
+        <div class="reg-step" id="step4">
+          <p class="font-semi mb-4">தொழில் விவரங்கள் — Business Preferences</p>
+
+          <!-- Farmers / Agent / Store -->
+          <div id="flowerPrefSection">
+            <div class="form-label mb-2">பூக்கள் தேர்வு — Select Flowers You Deal In</div>
+            <div class="flower-grid mb-4">
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">🌸 Rose / ரோஜா</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">⚪ Jasmine / மல்லிகை</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">🌼 Marigold / சாமந்தி</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">🪷 Lotus / தாமரை</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">🌺 Gerbera</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">💐 Chrysanthemum</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">🌻 Sunflower / சூரியகாந்தி</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">🌷 Tuberose / ஜாதி மல்லி</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">🏵 Crossandra / கனகாம்பரம்</span>
+              <span class="flower-chip" onclick="this.classList.toggle('sel')">Other / மற்றவை</span>
+            </div>
+            <div class="form-group mb-4">
+              <label class="form-label">பில் முறை — Billing Frequency</label>
+              <select class="form-select">
+                <option value="daily">Daily / தினசரி</option>
+                <option value="10">Every 10 Days / 10 நாட்கள்</option>
+                <option value="15" selected>Every 15 Days / 15 நாட்கள்</option>
+                <option value="monthly">Monthly / மாதாந்திரம்</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Vehicle Owner -->
+          <div id="vehiclePrefSection" style="display:none;">
+            <div class="form-group mb-3">
+              <label class="form-label">Vehicle Type / வண்டியின் வகை</label>
+              <select class="form-select"><option>Mini Van</option><option>Tempo</option><option>Lorry</option><option>Tractor</option><option>Truck</option><option>Two-wheeler</option></select>
+            </div>
+            <div class="form-row mb-3">
+              <div class="form-group"><label class="form-label">Registration No.</label><input class="form-input" placeholder="KA-XX-XXXX" style="text-transform:uppercase;"/></div>
+              <div class="form-group"><label class="form-label">Capacity (kg)</label><input class="form-input" type="number" placeholder="500"/></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Rate per km (₹)</label><input class="form-input" type="number" placeholder="12"/></div>
+              <div class="form-group"><label class="form-label">Base Charge / trip (₹)</label><input class="form-input" type="number" placeholder="300"/></div>
+            </div>
+          </div>
+
+          <!-- Driver -->
+          <div id="driverPrefSection" style="display:none;">
+            <div class="form-group mb-3">
+              <label class="form-label">Vehicles I Can Drive</label>
+              <div class="flower-grid">
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">🚐 Mini Van</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">🚛 Tempo</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">🚚 Lorry</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">🛵 Two-wheeler</span>
+              </div>
+            </div>
+            <div class="form-row mt-3">
+              <div class="form-group"><label class="form-label">Expected Hire / trip (₹)</label><input class="form-input" type="number" placeholder="1500"/></div>
+              <div class="form-group"><label class="form-label">Per km Rate (₹)</label><input class="form-input" type="number" placeholder="8"/></div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            <button class="btn btn-outline flex-1" onclick="goStep(3)">← Back</button>
+            <button class="btn btn-primary flex-1" onclick="goStep(5)">Submit →</button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Success -->
+        <div class="reg-step" id="step5">
+          <div class="success-wrap">
+            <div class="success-circle">✅</div>
+            <h2 class="mb-2">வெற்றிகரமாக பதிவு செய்யப்பட்டது!</h2>
+            <p class="text-muted mb-2">Registration Successful!</p>
+            <p class="text-sm text-muted mb-6">Welcome to FloraChain! Your KYC is under review. We'll notify you via SMS and Email once verified (within 24 hrs).</p>
+            <div style="background:var(--green-xlight);border:1px solid var(--green-light);border-radius:var(--radius-xl);padding:1.5rem;margin-bottom:1.5rem;text-align:left;">
+              <div class="font-semi text-green mb-2">What happens next?</div>
+              <div class="text-sm text-muted">📱 Welcome SMS sent to your mobile</div>
+              <div class="text-sm text-muted mt-1">📧 Welcome Email sent with your login details</div>
+              <div class="text-sm text-muted mt-1">🔍 KYC verification in progress (24 hrs)</div>
+              <div class="text-sm text-muted mt-1">🎉 Dashboard unlocked after verification</div>
+            </div>
+            <button class="btn btn-primary btn-xl w-full" onclick="window.location.href=dashboards[selectedRole] || 'dashboard-farmer.html'">Go to My Dashboard →</button>
+          </div>
+        </div>
+
+      </div><!-- end regForm -->
+    </div>
+  </div><!-- end auth-main -->
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script>
+  let currentStep=1, selectedRole='farmer', selectedLoginRole='';
+
+  // Dashboard map
+  const dashboards = {
+    farmer:      'dashboard-farmer.html',
+    agent:       'dashboard-agent.html',
+    storeowner:  'dashboard-store.html',
+    vehicleowner:'dashboard-vehicle.html',
+    driver:      'dashboard-driver.html',
+    admin:       'dashboard-admin.html'
+  };
+
+  function showLogin() {
+    document.getElementById('tabLogin').classList.add('active');
+    document.getElementById('tabReg').classList.remove('active');
+    document.getElementById('loginForm').style.display='block';
+    document.getElementById('regForm').style.display='none';
+  }
+  function showReg() {
+    document.getElementById('tabReg').classList.add('active');
+    document.getElementById('tabLogin').classList.remove('active');
+    document.getElementById('loginForm').style.display='none';
+    document.getElementById('regForm').style.display='block';
+  }
+
+  // Read URL param
+  const params=new URLSearchParams(location.search);
+  if(params.get('mode')==='login') { showLogin(); }
+  else { showReg(); }
+
+  // --- Login role selection ---
+  function selectLoginRole(el) {
+    document.querySelectorAll('#loginRoleGrid .login-role-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedLoginRole = el.dataset.role;
+  }
+
+  function doLogin() {
+    const id = document.getElementById('loginIdentifier').value.trim();
+    const pwd = document.getElementById('loginPwd').value;
+    if (!selectedLoginRole) { showToast('Please select your role first!','warning'); return; }
+    if (!id) { showToast('Enter your mobile number or email','warning'); return; }
+    if (!pwd) { showToast('Enter your password','warning'); return; }
+    const btn = document.getElementById('loginBtn');
+    btn.textContent = 'Signing in…'; btn.disabled = true;
+    setTimeout(()=>{
+      const dest = dashboards[selectedLoginRole] || 'dashboard-farmer.html';
+      window.location.href = dest;
+    }, 800);
+  }
+
+  // Pre-select role from URL (works for both login + register grids)
+  const urlRole=params.get('role');
+  if(urlRole) {
+    setTimeout(()=>{
+      // Register grid
+      const rc=document.querySelector('#roleGrid [data-role="'+urlRole+'"]');
+      if(rc) { rc.classList.add('selected'); selectedRole=urlRole; applyRolePref(urlRole); }
+      // Login grid — auto-select if mode=login or role param present
+      const lrc=document.querySelector('#loginRoleGrid [data-role="'+urlRole+'"]');
+      if(lrc) { selectLoginRole(lrc); }
+    },100);
+  }
+
+  function selectRole(el) {
+    document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedRole=el.dataset.role;
+    applyRolePref(selectedRole);
+  }
+
+  function applyRolePref(role) {
+    document.getElementById('flowerPrefSection').style.display = ['farmer','agent','storeowner'].includes(role)?'block':'none';
+    document.getElementById('vehiclePrefSection').style.display = role==='vehicleowner'?'block':'none';
+    document.getElementById('driverPrefSection').style.display  = role==='driver'?'block':'none';
+    document.getElementById('dlSection').style.display = role==='driver'?'block':'none';
+  }
+
+  function goStep(n) {
+    if(n===2 && !selectedRole) { showToast('Please select a role first!','warning'); return; }
+    document.querySelectorAll('.reg-step').forEach(s=>s.classList.remove('active'));
+    document.getElementById('step'+n).classList.add('active');
+    updateWizBar(n); currentStep=n;
+  }
+
+  function updateWizBar(active) {
+    for(let i=1;i<=5;i++) {
+      const c=document.getElementById('wc'+i), l=document.getElementById('wl'+i), ln=document.getElementById('wline'+i);
+      c.classList.remove('active','done'); l.classList.remove('active','done');
+      if(i<active)  { c.classList.add('done');   l.classList.add('done');   c.innerHTML='✓'; if(ln)ln.classList.add('done'); }
+      if(i===active){ c.classList.add('active');  l.classList.add('active'); c.innerHTML=i; }
+      if(i>active)  { c.innerHTML=i; if(ln)ln.classList.remove('done'); }
+    }
+  }
+
+  function sendOTP() {
+    const m=document.getElementById('mobileField').value.replace(/\D/g,'');
+    if(m.length<10) { showToast('Enter a valid 10-digit mobile number','warning'); return; }
+    document.getElementById('otpBtn').textContent='Sent ✓';
+    document.getElementById('otpBtn').disabled=true;
+    document.getElementById('otpSection').style.display='block';
+    showToast('OTP sent to +91 '+m,'success');
+    // OTP input auto-focus
+    const otps=document.querySelectorAll('.otp-input');
+    otps.forEach((inp,i)=>{
+      inp.addEventListener('input',()=>{ if(inp.value.length>=1 && otps[i+1]) otps[i+1].focus(); });
+    });
+  }
+
+  function checkPwd(v) {
+    const bars=document.getElementById('pwdBars');
+    const txt=document.getElementById('pwdStrengthText');
+    bars.className='pwd-bars';
+    let score=0;
+    if(v.length>=8) score++;
+    if(/[A-Z]/.test(v)) score++;
+    if(/[0-9]/.test(v)) score++;
+    if(/[^A-Za-z0-9]/.test(v)) score++;
+    const levels=['','strength-1','strength-2','strength-3','strength-4'];
+    const labels=['','Weak','Fair','Good','Strong 💪'];
+    const colors=['','var(--danger)','var(--warning)','var(--coral)','var(--success)'];
+    if(score>0) {
+      bars.classList.add('strength-'+score);
+      txt.textContent='Strength: '+labels[score];
+      txt.style.color=colors[score];
+    }
+  }
+
+  function togglePwd(id,btn) {
+    const inp=document.getElementById(id);
+    if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+    else{inp.type='password';btn.textContent='👁';}
+  }
+
+  function previewFile(input,id) {
+    if(input.files && input.files[0]) {
+      const reader=new FileReader();
+      reader.onload=e=>{
+        document.getElementById(id).innerHTML=`<img src="${e.target.result}" style="width:100%;height:100px;object-fit:contain;border-radius:var(--radius-md);"/>`;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function showToast(msg,type='info') {
+    const c=document.getElementById('toastContainer');
+    const icons={success:'✅',info:'ℹ️',warning:'⚠️',error:'❌'};
+    const t=document.createElement('div');
+    t.className='toast '+type;
+    t.innerHTML=`<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(()=>t.remove(),3500);
+  }
+
+  // OTP input auto-jump
+  document.querySelectorAll('.otp-input').forEach((inp,i,arr)=>{
+    inp.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!inp.value&&arr[i-1]) arr[i-1].focus(); });
+  });
+</script>
+</body>
+</html>

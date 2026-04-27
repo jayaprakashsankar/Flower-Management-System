@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel — FloraChain</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="assets/logo.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{background:var(--bg);}
+    .admin-stat{background:#fff;border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.5rem;display:flex;align-items:center;gap:1rem;}
+    .admin-stat-icon{width:52px;height:52px;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+    .admin-stat-icon.green{background:var(--green-xlight);}
+    .admin-stat-icon.amber{background:rgba(245,158,11,.12);}
+    .admin-stat-icon.blue{background:rgba(59,130,246,.1);}
+    .admin-stat-icon.red{background:rgba(239,68,68,.1);}
+    .admin-stat-icon.purple{background:rgba(139,92,246,.1);}
+    .kyc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:.75rem;}
+    .role-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .65rem;border-radius:var(--radius-full);font-size:.72rem;font-weight:700;}
+    .rb-farmer{background:#E8F5E9;color:#2E7D32;}
+    .rb-agent{background:#E3F2FD;color:#1565C0;}
+    .rb-store{background:#FFF3E0;color:#E65100;}
+    .rb-vehicle{background:#F3E5F5;color:#6A1B9A;}
+    .rb-driver{background:#E0F2F1;color:#00695C;}
+    .rb-admin{background:rgba(239,68,68,.1);color:#b91c1c;}
+    .user-row{display:flex;align-items:center;gap:1rem;padding:.85rem 0;border-bottom:1px solid var(--border);}
+    .user-row:last-child{border-bottom:none;}
+    .user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--coral));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex-shrink:0;}
+    .severity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .dot-red{background:#ef4444;}
+    .dot-amber{background:#f59e0b;}
+    .dot-green{background:#22c55e;}
+    .section-tab{display:none;}
+    .section-tab.active{display:block;}
+    .action-btn-sm{padding:.25rem .65rem;border-radius:var(--radius-full);font-size:.72rem;font-weight:700;border:none;cursor:pointer;transition:all .15s;}
+    .btn-approve{background:#E8F5E9;color:#2E7D32;}
+    .btn-approve:hover{background:#22c55e;color:#fff;}
+    .btn-reject{background:#FFEBEE;color:#b91c1c;}
+    .btn-reject:hover{background:#ef4444;color:#fff;}
+    .btn-suspend{background:#FFF3E0;color:#E65100;}
+    .btn-suspend:hover{background:#f59e0b;color:#fff;}
+    .metric-mini{background:var(--bg);border-radius:var(--radius-md);padding:.75rem 1rem;text-align:center;}
+    .system-item{display:flex;justify-content:space-between;align-items:center;padding:.85rem 0;border-bottom:1px solid var(--border);}
+    .system-item:last-child{border-bottom:none;}
+    .platform-bar{height:8px;border-radius:4px;background:var(--bg);overflow:hidden;margin-top:.4rem;}
+    .platform-fill{height:100%;border-radius:4px;background:linear-gradient(135deg,var(--primary),var(--primary-light));}
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="flex items-center gap-4">
+      <div class="hamburger" id="sidebarToggle"><span></span><span></span><span></span></div>
+      <a href="index.html" class="logo-mark"><img src="assets/logo.png" alt="FloraChain"/><span class="logo-text hide-mobile">Flora<span style="color:var(--coral)">Chain</span></span></a>
+      <span class="badge rb-admin" style="font-size:.7rem;padding:.25rem .75rem;">⚙️ Admin Panel</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <button class="btn-icon notif-dot" onclick="document.getElementById('notifPanel').classList.toggle('open')">🔔</button>
+        <div class="notif-panel" id="notifPanel">
+          <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;">System Alerts</div>
+          <div class="notif-item"><div class="notif-icon">🔐</div><div><div class="notif-text">5 KYC pending approval</div><div class="notif-time">Just now</div></div></div>
+          <div class="notif-item"><div class="notif-icon">⚠️</div><div><div class="notif-text">Marketplace listing flagged</div><div class="notif-time">20 min ago</div></div></div>
+          <div class="notif-item"><div class="notif-icon">💰</div><div><div class="notif-text">Monthly revenue: ₹4,82,600</div><div class="notif-time">Auto-generated</div></div></div>
+        </div>
+      </div>
+      <div class="avatar" style="background:linear-gradient(135deg,#ef4444,#b91c1c);" onclick="openModal('profileModal')">AD</div>
+    </div>
+  </div>
+</header>
+
+<div id="sidebarOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;backdrop-filter:blur(4px);"></div>
+
+<div class="layout-wrapper">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="sidebar-item active" onclick="showTab('overview')"><span class="s-icon">🏠</span> Dashboard</a>
+    <a class="sidebar-item" onclick="switchSection('network')"><span class="s-icon">🌐</span>People (Network)</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">User Management</div>
+      <a class="sidebar-item" onclick="showTab('kyc')"><span class="s-icon">🔐</span> KYC Queue <span class="sidebar-badge" id="kycBadge">5</span></a>
+      <a class="sidebar-item" onclick="showTab('users')"><span class="s-icon">👥</span> All Users</a>
+      <a class="sidebar-item" onclick="showTab('roles')"><span class="s-icon">🎭</span> Role Control</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Platform</div>
+      <a class="sidebar-item" onclick="showTab('marketplace')"><span class="s-icon">🌸</span> Marketplace</a>
+      <a class="sidebar-item" onclick="showTab('vehicles')"><span class="s-icon">🚛</span> Vehicles & Drivers</a>
+      <a class="sidebar-item" onclick="showTab('ledger')"><span class="s-icon">💰</span> Financial Ledger</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">System</div>
+      <a class="sidebar-item" onclick="showTab('rates')"><span class="s-icon">📊</span> Market Rates</a>
+      <a class="sidebar-item" onclick="showTab('settings')"><span class="s-icon">⚙️</span> Settings</a>
+      <a class="sidebar-item" href="index.html"><span class="s-icon">🔒</span> Sign Out</a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="page-content">
+
+      <!-- ═══ OVERVIEW ═══ -->
+      <div id="tab-overview" class="section-tab active">
+        <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+          <div><div class="page-title">Admin Dashboard ⚙️</div><div class="page-subtitle">FloraChain Platform Control Centre</div></div>
+          <div class="flex gap-2">
+            <button class="btn btn-outline btn-sm" onclick="showTab('kyc')">🔐 KYC Queue (5)</button>
+            <button class="btn btn-primary btn-sm" onclick="openModal('addAdminModal')">+ Add Admin</button>
+          </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid grid-4 gap-4 mb-6">
+          <div class="admin-stat"><div class="admin-stat-icon green">👥</div><div><div class="stat-label">Total Users</div><div class="stat-value" style="font-size:1.8rem;">1,284</div><div class="stat-change up">▲ 42 this week</div></div></div>
+          <div class="admin-stat"><div class="admin-stat-icon amber">💰</div><div><div class="stat-label">Platform Revenue</div><div class="stat-value text-accent" style="font-size:1.8rem;">₹4.82L</div><div class="stat-change up">▲ 18% vs Feb</div></div></div>
+          <div class="admin-stat"><div class="admin-stat-icon blue">🌸</div><div><div class="stat-label">Active Listings</div><div class="stat-value" style="font-size:1.8rem;">348</div><div class="stat-change up">▲ 12 today</div></div></div>
+          <div class="admin-stat"><div class="admin-stat-icon red">🔐</div><div><div class="stat-label">KYC Pending</div><div class="stat-value text-warning" style="font-size:1.8rem;" id="kycCount">5</div><div class="stat-change" style="color:var(--warning);">Needs attention</div></div></div>
+        </div>
+
+        <!-- 2nd row stats -->
+        <div class="grid grid-4 gap-4 mb-6">
+          <div class="admin-stat"><div class="admin-stat-icon purple">🌾</div><div><div class="stat-label">Farmers</div><div class="stat-value" style="font-size:1.4rem;">312</div></div></div>
+          <div class="admin-stat"><div class="admin-stat-icon blue">🤝</div><div><div class="stat-label">Agents</div><div class="stat-value" style="font-size:1.4rem;">87</div></div></div>
+          <div class="admin-stat"><div class="admin-stat-icon amber">🏪</div><div><div class="stat-label">Store Owners</div><div class="stat-value" style="font-size:1.4rem;">214</div></div></div>
+          <div class="admin-stat"><div class="admin-stat-icon green">🚚</div><div><div class="stat-label">Drivers</div><div class="stat-value" style="font-size:1.4rem;">671</div></div></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+          <div class="card">
+            <div class="flex justify-between items-center mb-4"><div class="font-semi">Platform Revenue (Last 6 Months)</div><span class="badge badge-green">Monthly</span></div>
+            <div style="height:240px;"><canvas id="revenueChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="font-semi mb-4">User Distribution</div>
+            <div style="height:240px;"><canvas id="userPieChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Recent activity + KYC preview -->
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div class="card">
+            <div class="flex justify-between mb-3"><div class="font-semi">Recent Registrations</div><button class="btn btn-ghost btn-sm" onclick="showTab('users')">View All →</button></div>
+            <div id="recentRegList"></div>
+          </div>
+          <div class="card">
+            <div class="flex justify-between mb-3"><div class="font-semi">KYC Pending</div><button class="btn btn-ghost btn-sm" onclick="showTab('kyc')">Review All →</button></div>
+            <div id="kycPreviewList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ KYC QUEUE ═══ -->
+      <div id="tab-kyc" class="section-tab">
+        <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+          <div><div class="page-title">🔐 KYC Verification Queue</div><div class="page-subtitle">Review and approve user identity documents</div></div>
+          <div class="flex gap-2">
+            <select class="form-select" style="width:auto;" id="kycRoleFilter" onchange="renderKYC()">
+              <option value="all">All Roles</option>
+              <option value="farmer">Farmers</option>
+              <option value="agent">Agents</option>
+              <option value="store">Store Owners</option>
+              <option value="driver">Drivers</option>
+              <option value="vehicle">Vehicle Owners</option>
+            </select>
+          </div>
+        </div>
+        <div id="kycList"></div>
+      </div>
+
+      <!-- ═══ ALL USERS ═══ -->
+      <div id="tab-users" class="section-tab">
+        <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+          <div><div class="page-title">👥 User Management</div><div class="page-subtitle">Search, manage and control all platform users</div></div>
+        </div>
+        <div class="card mb-4">
+          <div class="flex gap-3 mb-4" style="flex-wrap:wrap;">
+            <div class="input-group" style="flex:1;min-width:200px;"><span class="input-icon">🔍</span><input class="form-input" placeholder="Search by name, mobile or email…" id="userSearch" oninput="renderUsers()"/></div>
+            <select class="form-select" style="width:auto;" id="userRoleFilter" onchange="renderUsers()">
+              <option value="all">All Roles</option>
+              <option value="farmer">Farmer</option>
+              <option value="agent">Agent</option>
+              <option value="store">Store</option>
+              <option value="driver">Driver</option>
+              <option value="vehicle">Vehicle</option>
+            </select>
+            <select class="form-select" style="width:auto;" id="userStatusFilter" onchange="renderUsers()">
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending KYC</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Role</th><th>Mobile</th><th>Location</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ROLE CONTROL ═══ -->
+      <div id="tab-roles" class="section-tab">
+        <div class="page-header"><div class="page-title">🎭 Role Control</div><div class="page-subtitle">Manage admin accounts and role permissions</div></div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div class="card">
+            <div class="font-semi mb-4">Admin Accounts</div>
+            <div id="adminList"></div>
+            <button class="btn btn-primary btn-sm mt-4 w-full" onclick="openModal('addAdminModal')">+ Add New Admin</button>
+          </div>
+          <div class="card">
+            <div class="font-semi mb-4">Role Permissions Matrix</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Feature</th><th>Farmer</th><th>Agent</th><th>Store</th><th>Driver</th></tr></thead>
+                <tbody>
+                  <tr><td class="font-semi text-sm">Marketplace</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
+                  <tr><td class="font-semi text-sm">Vehicle Request</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
+                  <tr><td class="font-semi text-sm">Driver Mode</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+                  <tr><td class="font-semi text-sm">Billing System</td><td>—</td><td>✅</td><td>✅</td><td>—</td></tr>
+                  <tr><td class="font-semi text-sm">Market Rates View</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
+                  <tr><td class="font-semi text-sm">Live Tracking</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ MARKETPLACE ═══ -->
+      <div id="tab-marketplace" class="section-tab">
+        <div class="page-header"><div class="page-title">🌸 Marketplace Management</div><div class="page-subtitle">Monitor listings, flag suspicious items, manage visibility</div></div>
+        <div class="grid grid-4 gap-4 mb-6">
+          <div class="stat-card"><div class="stat-label">Total Listings</div><div class="stat-value text-green">348</div></div>
+          <div class="stat-card accent"><div class="stat-label">Active Today</div><div class="stat-value text-accent">214</div></div>
+          <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value text-warning">3</div></div>
+          <div class="stat-card info"><div class="stat-label">Sold This Month</div><div class="stat-value">1,847</div></div>
+        </div>
+        <div class="card">
+          <div class="flex justify-between mb-4"><div class="font-semi">All Listings</div>
+            <select class="form-select" style="width:auto;" id="listingFilter" onchange="renderListings()">
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="flagged">Flagged</option>
+              <option value="removed">Removed</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Flower</th><th>Seller</th><th>Role</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="listingsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ VEHICLES & DRIVERS ═══ -->
+      <div id="tab-vehicles" class="section-tab">
+        <div class="page-header"><div class="page-title">🚛 Vehicles & Drivers</div><div class="page-subtitle">Platform fleet overview and driver status</div></div>
+        <div class="grid grid-4 gap-4 mb-6">
+          <div class="stat-card"><div class="stat-label">Total Vehicles</div><div class="stat-value">142</div></div>
+          <div class="stat-card accent"><div class="stat-label">Active Now</div><div class="stat-value text-green">38</div></div>
+          <div class="stat-card"><div class="stat-label">Total Drivers</div><div class="stat-value">671</div></div>
+          <div class="stat-card info"><div class="stat-label">On Duty Now</div><div class="stat-value text-accent">184</div></div>
+        </div>
+        <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;">
+          <div class="card">
+            <div class="font-semi mb-4">Vehicle Fleet Overview</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Reg. No.</th><th>Type</th><th>Owner</th><th>Driver</th><th>Status</th><th>Trips</th></tr></thead>
+                <tbody id="vehicleTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="font-semi mb-4">Fleet by Type</div>
+            <div style="height:220px;"><canvas id="fleetChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ FINANCIAL LEDGER ═══ -->
+      <div id="tab-ledger" class="section-tab">
+        <div class="page-header"><div class="page-title">💰 Universal Financial Ledger</div><div class="page-subtitle">Platform-wide financial overview across all roles</div></div>
+        <div class="grid grid-4 gap-4 mb-6">
+          <div class="stat-card"><div class="stat-label">Gross Revenue (Mar)</div><div class="stat-value text-green">₹4,82,600</div><div class="stat-change up">▲ 18%</div></div>
+          <div class="stat-card accent"><div class="stat-label">Platform Commission</div><div class="stat-value text-accent">₹24,130</div><div class="stat-change up">5% of GMV</div></div>
+          <div class="stat-card"><div class="stat-label">Pending Settlements</div><div class="stat-value text-warning">₹38,400</div></div>
+          <div class="stat-card info"><div class="stat-label">Transactions (Mar)</div><div class="stat-value">2,847</div></div>
+        </div>
+        <div class="card mb-4"><div class="font-semi mb-4">Revenue by Role (Last 6 Months)</div><div style="height:260px;"><canvas id="ledgerChart"></canvas></div></div>
+        <div class="card">
+          <div class="flex justify-between mb-4"><div class="font-semi">Recent Platform Transactions</div><button class="btn btn-ghost btn-sm" onclick="showToast('Exporting CSV…','info')">📥 Export</button></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Party</th><th>Role</th><th>Type</th><th>Amount</th><th>Commission</th><th>Status</th></tr></thead>
+              <tbody id="ledgerTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ MARKET RATES ═══ -->
+      <div id="tab-rates" class="section-tab">
+        <div class="page-header"><div class="page-title">📊 Market Rate Management</div><div class="page-subtitle">Set and publish daily flower rates across the platform</div></div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div class="card">
+            <div class="font-semi mb-4">Set Today's Rates</div>
+            <div style="display:flex;flex-direction:column;gap:.85rem;" id="rateInputs"></div>
+            <button class="btn btn-primary btn-lg w-full mt-4" onclick="publishRates()">📢 Publish Rates</button>
+          </div>
+          <div class="card">
+            <div class="font-semi mb-4">Price History</div>
+            <div style="height:300px;"><canvas id="rateHistChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <div id="tab-settings" class="section-tab">
+        <div class="page-header"><div class="page-title">⚙️ Platform Settings</div></div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div class="card">
+            <div class="font-semi mb-4">Platform Configuration</div>
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              <div class="form-group"><label class="form-label">Platform Commission (%)</label><input type="number" class="form-input" value="5" step="0.5"/></div>
+              <div class="form-group"><label class="form-label">KYC Verification SLA (hours)</label><input type="number" class="form-input" value="24"/></div>
+              <div class="form-group"><label class="form-label">Max Listing Price (₹/kg)</label><input type="number" class="form-input" value="1000"/></div>
+              <div class="form-group"><label class="form-label">Marketplace Status</label>
+                <div class="toggle-wrap mt-1"><div class="toggle-switch active" id="mktToggle"></div><span class="toggle-label">Open</span></div>
+              </div>
+              <button class="btn btn-primary" onclick="showToast('Settings saved!','success')">Save Configuration</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="font-semi mb-4">System Health</div>
+            <div id="systemHealth"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <div class="bottom-nav-item active" onclick="showTab('overview')"><span class="nav-icon">🏠</span>Home</div>
+    <div class="bottom-nav-item" onclick="showTab('kyc')"><span class="nav-icon">🔐</span>KYC</div>
+    <div class="bottom-nav-item" onclick="showTab('users')"><span class="nav-icon">👥</span>Users</div>
+    <div class="bottom-nav-item" onclick="showTab('ledger')"><span class="nav-icon">💰</span>Finance</div>
+    <div class="bottom-nav-item" onclick="showTab('settings')"><span class="nav-icon">⚙️</span>Settings</div>
+  </div>
+</nav>
+
+<!-- Add Admin Modal -->
+<div class="modal-overlay" id="addAdminModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🔑 Add Admin Account</div><button class="modal-close" onclick="closeModal('addAdminModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="adminName" placeholder="Admin Name"/></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="adminEmail" placeholder="admin@florachain.com"/></div>
+      <div class="form-group"><label class="form-label">Mobile</label><input class="form-input" type="tel" id="adminPhone" placeholder="98765 43210"/></div>
+      <div class="form-group"><label class="form-label">Admin Level</label>
+        <select class="form-select" id="adminLevel">
+          <option value="super">Super Admin (Full Access)</option>
+          <option value="kyc">KYC Manager</option>
+          <option value="finance">Finance Manager</option>
+          <option value="support">Support Admin</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Temporary Password</label><input class="form-input" type="password" id="adminPwd" placeholder="Min 8 chars"/></div>
+      <button class="btn btn-primary btn-lg w-full" onclick="addAdminAccount()">Create Admin Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Admin Profile</div><button class="modal-close" onclick="closeModal('profileModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,#ef4444,#b91c1c);">AD</div>
+      <div class="font-bold text-xl">Super Administrator</div>
+      <div class="text-sm text-muted">⚙️ Full Access · FloraChain HQ</div>
+      <span class="badge rb-admin mt-2">Super Admin</span>
+    </div>
+    <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
+      <button class="btn btn-primary w-full" onclick="closeModal('profileModal');showTab('settings')">⚙️ Settings</button>
+      <a href="index.html" class="btn btn-danger w-full">Sign Out</a>
+    </div>
+  </div>
+</div>
+
+
+<!-- Profile Detail Modal -->
+<div class="modal-overlay" id="profileDetailModal" onclick="if(event.target===this) closeModal('profileDetailModal')">
+  <div class="modal" style="max-width:550px;">
+    <div class="modal-header"><div class="modal-title">👤 Profile Showcase</div><button class="modal-close" onclick="closeModal('profileDetailModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,var(--blue),#0D47A1);" id="pdAvatar">P</div>
+      <div class="font-bold text-xl" id="pdName">Name</div>
+      <div class="text-sm text-muted"><span id="pdRole">Role</span> · <span id="pdLoc">Location</span></div>
+    </div>
+    <div style="background:#f9fafb;border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;" id="pdDetails">
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-primary flex-1" onclick="closeModal('profileDetailModal');openModal('connectModal')">🤝 Request Connection</button>
+      <button class="btn btn-outline flex-1" onclick="closeModal('profileDetailModal')">Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- Connect Modal -->
+<div class="modal-overlay" id="connectModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🤝 Send Connection Request</div><button class="modal-close" onclick="closeModal('connectModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div id="connectTarget" class="font-semi text-center pb-2 border-b border-gray">Connecting...</div>
+      <div class="form-group"><label class="form-label">Purpose of Connection</label>
+        <select class="form-select" id="connPurpose">
+          <option value="buying">Buying / Sourcing Flowers</option>
+          <option value="selling">Selling / Supplying Flowers</option>
+          <option value="transport">Booking Transport</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Requested Settlement Cycle</label>
+        <select class="form-select" id="connBilling">
+          <option value="daily">Daily Settlement</option>
+          <option value="half_month">15-Day (Half-Month)</option>
+          <option value="monthly">Monthly Settlement</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Message (Optional)</label>
+        <textarea class="form-input" id="connMsg" rows="2" placeholder="Let's do business together..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-lg w-full" onclick="confirmConnection()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Modal -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal" style="width:400px;padding:0;overflow:hidden;display:flex;flex-direction:column;height:80vh;max-height:600px;">
+    <div style="padding:1rem 1.5rem;background:var(--bg);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div class="font-semi" id="chatTitle">Direct Message</div>
+      <button class="modal-close" onclick="closeModal('chatModal')">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:1rem;background:#f9fafb;display:flex;flex-direction:column;gap:1rem;" id="chatMsgs">
+      <div class="text-center text-xs text-muted mb-2">Today</div>
+    </div>
+    <div style="padding:1rem;border-top:1px solid var(--border);background:#fff;display:flex;gap:.5rem;">
+      <input type="text" class="form-input" style="flex:1;" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()"/>
+      <button class="btn btn-primary" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="assets/dashboard.js"></script>
+<script>
+// ─── Section switching ─────────────────────────────────────────────
+const TABS = ['overview','kyc','users','roles','marketplace','vehicles','ledger','rates','settings'];
+function showTab(name) {
+  TABS.forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if (el) el.classList.toggle('active', t === name);
+  });
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  const si = document.querySelector(`.sidebar-item[onclick="showTab('${name}')"]`);
+  if (si) si.classList.add('active');
+  document.querySelectorAll('.bottom-nav-item').forEach(i => i.classList.remove('active'));
+}
+
+// ─── Data ───────────────────────────────────────────────────────────
+const KYC_QUEUE = [
+  {id:1, name:'Kavitha Sundaram', role:'farmer', mobile:'9876501001', location:'Mysuru, KA', joined:'28 Mar', aadhaar:'XXXX-XXXX-7812', docs:['Aadhaar Front','Aadhaar Back']},
+  {id:2, name:'Mohammed Farhan', role:'driver', mobile:'9876501002', location:'Bangalore, KA', joined:'28 Mar', aadhaar:'XXXX-XXXX-9234', docs:['Aadhaar Front','Driving License']},
+  {id:3, name:'Preethi Raj', role:'store', mobile:'9876501003', location:'Chennai, TN', joined:'27 Mar', aadhaar:'XXXX-XXXX-4512', docs:['Aadhaar Front','Aadhaar Back']},
+  {id:4, name:'Sunil Patil', role:'vehicle', mobile:'9876501004', location:'Pune, MH', joined:'27 Mar', aadhaar:'XXXX-XXXX-3341', docs:['Aadhaar Front','RC Book']},
+  {id:5, name:'Anitha Krishnan', role:'agent', mobile:'9876501005', location:'Coimbatore, TN', joined:'26 Mar', aadhaar:'XXXX-XXXX-8823', docs:['Aadhaar Front','Aadhaar Back']},
+];
+
+const USERS = [
+  {name:'Ramesh Kumar', role:'farmer', mobile:'9876500001', location:'Mysuru, KA', joined:'15 Jan', status:'active'},
+  {name:'Suresh Agencies', role:'agent', mobile:'9876500002', location:'Bangalore, KA', joined:'20 Jan', status:'active'},
+  {name:'Pooja Florals', role:'store', mobile:'9876500003', location:'Bangalore, KA', joined:'1 Feb', status:'active'},
+  {name:'Arjun Sharma', role:'driver', mobile:'9876500004', location:'Bangalore, KA', joined:'10 Feb', status:'active'},
+  {name:'Vinod Transport', role:'vehicle', mobile:'9876500005', location:'Bangalore, KA', joined:'12 Feb', status:'active'},
+  {name:'Meena Farms', role:'farmer', mobile:'9876500006', location:'Ooty, TN', joined:'5 Mar', status:'pending'},
+  {name:'Ravi Logistics', role:'vehicle', mobile:'9876500007', location:'Chennai, TN', joined:'10 Mar', status:'suspended'},
+  {name:'Kavitha Sundaram', role:'farmer', mobile:'9876501001', location:'Mysuru, KA', joined:'28 Mar', status:'pending'},
+];
+
+const LISTINGS_DATA = [
+  {flower:'🌸 Rose',seller:'Ramesh Kumar',role:'farmer',price:'₹115/kg',stock:'80 kg',status:'active'},
+  {flower:'🌼 Marigold',seller:'Suresh Agencies',role:'agent',price:'₹43/kg',stock:'200 kg',status:'active'},
+  {flower:'⚪ Jasmine',seller:'Velu Farm',role:'farmer',price:'₹265/kg',stock:'15 kg',status:'active'},
+  {flower:'🌸 Rose Grade B',seller:'Unknown Seller',role:'agent',price:'₹999/kg',stock:'500 kg',status:'flagged'},
+  {flower:'🌺 Gerbera',seller:'Priya Flowers',role:'store',price:'₹16/stem',stock:'300 stems',status:'active'},
+  {flower:'💐 Mixed Pack',seller:'Old Account',role:'farmer',price:'₹50/kg',stock:'0 kg',status:'removed'},
+];
+
+const VEHICLE_DATA = [
+  {reg:'TN-09-AX-2341',type:'Mini Van',owner:'Vinod Rajan',driver:'Arjun Sharma',status:'active',trips:42},
+  {reg:'KA-05-BX-7812',type:'Tempo',owner:'Vinod Rajan',driver:'Mohan R.',status:'active',trips:38},
+  {reg:'KA-01-CX-4521',type:'Lorry',owner:'Ravi Logistics',driver:'Suresh D.',status:'suspended',trips:12},
+  {reg:'MH-12-DX-9988',type:'Truck',owner:'Patil Transport',driver:'Unassigned',status:'inactive',trips:0},
+];
+
+const LEDGER_TX = [
+  {date:'28 Mar',party:'Ramesh Kumar',role:'farmer',type:'Sale',amt:'₹5,750',comm:'₹287',status:'Settled'},
+  {date:'28 Mar',party:'Suresh Agencies',role:'agent',type:'Commission',amt:'₹12,400',comm:'₹620',status:'Pending'},
+  {date:'27 Mar',party:'Pooja Florals',role:'store',type:'Purchase',amt:'₹8,200',comm:'₹410',status:'Settled'},
+  {date:'27 Mar',party:'Arjun Sharma',role:'driver',type:'Trip Fee',amt:'₹1,800',comm:'₹90',status:'Settled'},
+  {date:'26 Mar',party:'Velu Farm',role:'farmer',type:'Sale',amt:'₹3,975',comm:'₹199',status:'Pending'},
+];
+
+const ADMINS = [
+  {name:'Super Administrator',email:'admin@florachain.com',level:'Super Admin',status:'active'},
+  {name:'Priya Nair',email:'priya@florachain.com',level:'KYC Manager',status:'active'},
+  {name:'Rajan Finance',email:'finance@florachain.com',level:'Finance Manager',status:'active'},
+];
+
+const RATES_DATA = [
+  {flower:'🌸 Rose',key:'rose',rate:120},
+  {flower:'🌼 Marigold',key:'marigold',rate:45},
+  {flower:'⚪ Jasmine',key:'jasmine',rate:280},
+  {flower:'🪷 Lotus',key:'lotus',rate:95},
+  {flower:'🌺 Gerbera',key:'gerbera',rate:18},
+  {flower:'🌻 Sunflower',key:'sunflower',rate:22},
+];
+
+// ─── Role badge HTML ─────────────────────────────────────────────────
+function roleBadge(role) {
+  const map = {farmer:'rb-farmer 🌾 Farmer',agent:'rb-agent 🤝 Agent',store:'rb-store 🏪 Store',driver:'rb-driver 🚚 Driver',vehicle:'rb-vehicle 🚛 Vehicle'};
+  const parts = (map[role]||'🔹 '+role).split(' ');
+  const cls = parts[0]; const label = parts.slice(1).join(' ');
+  return `<span class="role-badge ${cls}">${label}</span>`;
+}
+
+// ─── Status badge ────────────────────────────────────────────────────
+function statusBadge(s) {
+  const m = {active:'badge-green',pending:'badge-amber',suspended:'badge-coral',flagged:'badge-amber',removed:'badge-grey',settled:'badge-green',Settled:'badge-green',Pending:'badge-amber'};
+  return `<span class="badge ${m[s]||'badge-grey'}">${s}</span>`;
+}
+
+// ─── Render KYC ──────────────────────────────────────────────────────
+function renderKYC() {
+  const filter = (document.getElementById('kycRoleFilter')||{value:'all'}).value;
+  const list = document.getElementById('kycList');
+  const items = filter==='all' ? KYC_QUEUE : KYC_QUEUE.filter(k=>k.role===filter||k.role.startsWith(filter));
+  if (!list) return;
+  list.innerHTML = items.map(k=>`
+    <div class="kyc-card">
+      <div class="flex justify-between items-start" style="flex-wrap:wrap;gap:1rem;">
+        <div class="flex gap-3 items-center">
+          <div class="user-avatar">${k.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+          <div>
+            <div class="font-semi">${k.name}</div>
+            <div class="text-xs text-muted">📱 ${k.mobile} · 📍 ${k.location}</div>
+            <div class="flex gap-2 mt-1">${roleBadge(k.role)}<span class="text-xs text-muted">Registered ${k.joined}</span></div>
+          </div>
+        </div>
+        <div class="flex gap-2 items-center">
+          <div>
+            <div class="text-xs text-muted mb-1">Aadhaar: ${k.aadhaar}</div>
+            <div class="flex gap-1">${k.docs.map(d=>`<span class="badge badge-blue" style="font-size:.65rem;">📄 ${d}</span>`).join('')}</div>
+          </div>
+          <div class="flex gap-2 ml-3">
+            <button class="action-btn-sm btn-approve" onclick="kycAction(${k.id},'approve',this)">✅ Approve</button>
+            <button class="action-btn-sm btn-reject" onclick="kycAction(${k.id},'reject',this)">❌ Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('') || '<div class="text-muted text-sm p-4">No KYC requests matching filter.</div>';
+}
+
+function kycAction(id, action, btn) {
+  const card = btn.closest('.kyc-card');
+  if (action === 'approve') {
+    card.style.borderColor = '#22c55e';
+    card.insertAdjacentHTML('beforeend','<div class="badge badge-green mt-3" style="display:block;text-align:center;padding:.5rem;">✅ KYC Approved</div>');
+    const kycCount = parseInt(document.getElementById('kycCount').textContent) - 1;
+    document.getElementById('kycCount').textContent = Math.max(0, kycCount);
+    document.getElementById('kycBadge').textContent = Math.max(0, kycCount);
+    showToast('KYC Approved for user #'+id,'success');
+  } else {
+    card.style.opacity = '.5';
+    card.insertAdjacentHTML('beforeend','<div class="badge badge-coral mt-3" style="display:block;text-align:center;padding:.5rem;">❌ KYC Rejected</div>');
+    showToast('KYC Rejected for user #'+id,'warning');
+  }
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.disabled=true);
+}
+
+// ─── Render Users ─────────────────────────────────────────────────────
+function renderUsers() {
+  const search = (document.getElementById('userSearch')||{value:''}).value.toLowerCase();
+  const role = (document.getElementById('userRoleFilter')||{value:'all'}).value;
+  const status = (document.getElementById('userStatusFilter')||{value:'all'}).value;
+  const t = document.getElementById('usersTable');
+  if (!t) return;
+  const filtered = USERS.filter(u=>{
+    if(role!=='all'&&!u.role.startsWith(role))return false;
+    if(status!=='all'&&u.status!==status)return false;
+    if(search&&!u.name.toLowerCase().includes(search)&&!u.mobile.includes(search))return false;
+    return true;
+  });
+  t.innerHTML = filtered.map(u=>`<tr>
+    <td><div class="flex gap-2 items-center"><div class="user-avatar" style="width:32px;height:32px;font-size:.75rem;">${u.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div><div class="font-semi text-sm">${u.name}</div></div></td>
+    <td>${roleBadge(u.role)}</td>
+    <td class="text-sm">${u.mobile}</td>
+    <td class="text-sm text-muted">${u.location}</td>
+    <td class="text-sm text-muted">${u.joined}</td>
+    <td>${statusBadge(u.status)}</td>
+    <td><div class="flex gap-1">
+      ${u.status!=='suspended'?`<button class="action-btn-sm btn-suspend" onclick="showToast('User suspended','warning')">Suspend</button>`:''}
+      <button class="action-btn-sm btn-approve" onclick="showToast('Viewing profile…','info')">View</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ─── Render Listings ─────────────────────────────────────────────────
+function renderListings() {
+  const filter = (document.getElementById('listingFilter')||{value:'all'}).value;
+  const t = document.getElementById('listingsTable');
+  if (!t) return;
+  const items = filter==='all' ? LISTINGS_DATA : LISTINGS_DATA.filter(l=>l.status===filter);
+  t.innerHTML = items.map(l=>`<tr>
+    <td class="font-semi text-sm">${l.flower}</td>
+    <td class="text-sm">${l.seller}</td>
+    <td>${roleBadge(l.role)}</td>
+    <td class="font-bold text-green">${l.price}</td>
+    <td class="text-sm">${l.stock}</td>
+    <td>${statusBadge(l.status)}</td>
+    <td><div class="flex gap-1">
+      ${l.status==='flagged'?`<button class="action-btn-sm btn-approve" onclick="showToast('Listing approved','success')">Approve</button><button class="action-btn-sm btn-reject" onclick="showToast('Listing removed','warning')">Remove</button>`:''}
+      ${l.status==='active'?`<button class="action-btn-sm btn-reject" onclick="showToast('Listing flagged for review','warning')">Flag</button>`:''}
+      ${l.status==='removed'?`<button class="action-btn-sm btn-approve" onclick="showToast('Listing restored','success')">Restore</button>`:''}
+    </div></td>
+  </tr>`).join('');
+}
+
+// ─── Render misc sections ────────────────────────────────────────────
+function renderVehicles() {
+  const t = document.getElementById('vehicleTable');
+  if (!t) return;
+  t.innerHTML = VEHICLE_DATA.map(v=>`<tr>
+    <td class="font-semi text-sm">${v.reg}</td>
+    <td class="text-sm">${v.type}</td>
+    <td class="text-sm">${v.owner}</td>
+    <td class="text-sm">${v.driver}</td>
+    <td>${statusBadge(v.status)}</td>
+    <td class="text-sm font-semi">${v.trips}</td>
+  </tr>`).join('');
+}
+
+function renderLedger() {
+  const t = document.getElementById('ledgerTable');
+  if (!t) return;
+  t.innerHTML = LEDGER_TX.map(tx=>`<tr>
+    <td class="text-sm text-muted">${tx.date}</td>
+    <td class="font-semi text-sm">${tx.party}</td>
+    <td>${roleBadge(tx.role)}</td>
+    <td><span class="badge badge-blue text-xs">${tx.type}</span></td>
+    <td class="font-bold text-green">${tx.amt}</td>
+    <td class="text-sm text-muted">${tx.comm}</td>
+    <td>${statusBadge(tx.status)}</td>
+  </tr>`).join('');
+}
+
+function renderAdmins() {
+  const el = document.getElementById('adminList');
+  if (!el) return;
+  el.innerHTML = ADMINS.map(a=>`
+    <div class="user-row">
+      <div class="user-avatar" style="background:linear-gradient(135deg,#ef4444,#b91c1c);">${a.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+      <div style="flex:1;">
+        <div class="font-semi text-sm">${a.name}</div>
+        <div class="text-xs text-muted">${a.email}</div>
+      </div>
+      <span class="badge rb-admin">${a.level}</span>
+    </div>`).join('');
+}
+
+function renderOverviewPreviews() {
+  const rrl = document.getElementById('recentRegList');
+  if (rrl) rrl.innerHTML = USERS.slice(0,4).map(u=>`
+    <div class="user-row">
+      <div class="user-avatar">${u.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+      <div style="flex:1;"><div class="font-semi text-sm">${u.name}</div><div class="text-xs text-muted">${u.location} · ${u.joined}</div></div>
+      ${roleBadge(u.role)}
+    </div>`).join('');
+  const kpl = document.getElementById('kycPreviewList');
+  if (kpl) kpl.innerHTML = KYC_QUEUE.slice(0,3).map(k=>`
+    <div class="user-row">
+      <div class="user-avatar">${k.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+      <div style="flex:1;"><div class="font-semi text-sm">${k.name}</div><div class="text-xs text-muted">${k.location} · ${k.joined}</div></div>
+      ${roleBadge(k.role)}
+    </div>`).join('');
+}
+
+function renderRateInputs() {
+  const el = document.getElementById('rateInputs');
+  if (!el) return;
+  el.innerHTML = RATES_DATA.map(r=>`
+    <div class="form-group">
+      <label class="form-label">${r.flower}</label>
+      <div class="input-group"><span class="input-icon">₹</span><input type="number" class="form-input" value="${r.rate}" id="rate_${r.key}"/><span class="input-suffix">/ ${r.key==='gerbera'||r.key==='sunflower'?'stem':'kg'}</span></div>
+    </div>`).join('');
+}
+
+function renderSystemHealth() {
+  const el = document.getElementById('systemHealth');
+  if (!el) return;
+  const items = [
+    {label:'Backend API',value:'Operational',dot:'dot-green'},
+    {label:'Database',value:'Operational',dot:'dot-green'},
+    {label:'WebSocket Server',value:'Operational',dot:'dot-green'},
+    {label:'SMS Gateway',value:'Degraded',dot:'dot-amber'},
+    {label:'Email Service',value:'Operational',dot:'dot-green'},
+    {label:'Storage (Media)',value:'Operational',dot:'dot-green'},
+    {label:'Razorpay Integration',value:'Not Configured',dot:'dot-amber'},
+  ];
+  el.innerHTML = items.map(i=>`
+    <div class="system-item">
+      <div class="flex gap-2 items-center"><div class="severity-dot ${i.dot}"></div><span class="text-sm font-semi">${i.label}</span></div>
+      <span class="text-sm text-muted">${i.value}</span>
+    </div>`).join('');
+}
+
+function publishRates() {
+  showToast('✅ Market rates published platform-wide!','success');
+}
+
+function addAdminAccount() {
+  const name = document.getElementById('adminName').value.trim();
+  const email = document.getElementById('adminEmail').value.trim();
+  if (!name||!email) { showToast('Please fill all required fields','warning'); return; }
+  ADMINS.push({name, email, level: document.getElementById('adminLevel').options[document.getElementById('adminLevel').selectedIndex].text, status:'active'});
+  closeModal('addAdminModal');
+  renderAdmins();
+  showToast('✅ Admin account created for '+name,'success');
+  document.getElementById('adminName').value='';
+  document.getElementById('adminEmail').value='';
+  document.getElementById('adminPhone').value='';
+  document.getElementById('adminPwd').value='';
+}
+
+// ─── Charts ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderKYC();
+  renderUsers();
+  renderListings();
+  renderVehicles();
+  renderLedger();
+  renderAdmins();
+  renderOverviewPreviews();
+  renderRateInputs();
+  renderSystemHealth();
+  initToggles();
+
+  // Revenue chart
+  new Chart(document.getElementById('revenueChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:last6Months(),datasets:[
+      {label:'Farmers',data:randArr(6,80000,140000),backgroundColor:'rgba(26,122,74,.7)',borderRadius:4},
+      {label:'Agents',data:randArr(6,40000,80000),backgroundColor:'rgba(212,160,23,.7)',borderRadius:4},
+      {label:'Stores',data:randArr(6,60000,100000),backgroundColor:'rgba(139,92,246,.7)',borderRadius:4},
+    ]},
+    options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+  });
+
+  // User pie
+  new Chart(document.getElementById('userPieChart').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['Farmers','Agents','Stores','Drivers','Vehicles'],datasets:[{data:[312,87,214,671,142],backgroundColor:['#1a7a4a','#d4a017','#8b5cf6','#ef4444','#3b82f6'],borderWidth:2,borderColor:'#fff'}]},
+    options:{...getNoAxisDefaults(),responsive:true,maintainAspectRatio:false,cutout:'60%'}
+  });
+
+  // Fleet chart
+  new Chart(document.getElementById('fleetChart').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['Mini Van','Tempo','Lorry','Truck','Two-wheeler'],datasets:[{data:[48,32,28,18,16],backgroundColor:['#1a7a4a','#d4a017','#ef4444','#8b5cf6','#3b82f6'],borderWidth:2,borderColor:'#fff'}]},
+    options:{...getNoAxisDefaults(),responsive:true,maintainAspectRatio:false,cutout:'55%'}
+  });
+
+  // Ledger chart
+  new Chart(document.getElementById('ledgerChart').getContext('2d'),{
+    type:'line',
+    data:{labels:last6Months(),datasets:[
+      {label:'Farmers',data:randArr(6,80000,140000),borderColor:'#1a7a4a',fill:false,tension:.4},
+      {label:'Agents',data:randArr(6,40000,80000),borderColor:'#d4a017',fill:false,tension:.4},
+      {label:'Stores',data:randArr(6,60000,100000),borderColor:'#8b5cf6',fill:false,tension:.4},
+      {label:'Drivers',data:randArr(6,10000,30000),borderColor:'#ef4444',fill:false,tension:.4},
+    ]},
+    options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+  });
+
+  // Rate history
+  new Chart(document.getElementById('rateHistChart').getContext('2d'),{
+    type:'line',
+    data:{labels:last12Months(),datasets:[
+      {label:'Rose',data:randArr(12,90,140),borderColor:'#ec4899',tension:.4,borderWidth:2},
+      {label:'Marigold',data:randArr(12,30,60),borderColor:'#d4a017',tension:.4,borderWidth:2},
+      {label:'Jasmine',data:randArr(12,200,320),borderColor:'#e2e8f0',tension:.4,borderWidth:2},
+    ]},
+    options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+  });
+});
+</script>
+<script src="assets/network.js"></script>
+</body>
+</html>

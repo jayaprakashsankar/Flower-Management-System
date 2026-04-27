@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Agent Billing Dashboard — FloraChain</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="assets/logo.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{background:var(--bg);}
+    /* ── Entry Grid ── */
+    .entry-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+    .entry-table th{background:var(--green-dark);color:#fff;padding:.55rem .75rem;text-align:center;font-size:.72rem;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:2;}
+    .entry-table th:first-child{text-align:left;}
+    .entry-table td{padding:.45rem .6rem;border:1px solid var(--border);text-align:center;vertical-align:middle;}
+    .entry-table td:first-child{text-align:left;font-weight:600;background:#FAFAFA;position:sticky;left:0;z-index:1;min-width:160px;}
+    .entry-table tr:hover td{background:#F1F8E9;}
+    .entry-input{width:68px;border:1.5px solid var(--border);border-radius:6px;padding:.3rem .4rem;text-align:center;font-size:.8rem;font-family:inherit;}
+    .entry-input:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 2px var(--green-glow);}
+    .entry-input.has-value{background:#E8F5E9;border-color:var(--green-light);font-weight:700;color:var(--green-dark);}
+    .entry-total{font-weight:800;color:var(--green-dark);font-size:.85rem;}
+    /* ── Farmer status pills ── */
+    .status-started{background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9;padding:.2rem .7rem;border-radius:var(--radius-full);font-size:.68rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;}
+    .status-completed{background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:.2rem .7rem;border-radius:var(--radius-full);font-size:.68rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;}
+    .status-pending{background:#FFF3E0;color:#E65100;border:1px solid #FFCC80;padding:.2rem .7rem;border-radius:var(--radius-full);font-size:.68rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;}
+    /* ── Farmer mini-avatar in entry grid ── */
+    .farmer-cell{display:flex;align-items:center;gap:.6rem;}
+    .farmer-cell-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.6rem;flex-shrink:0;}
+    /* ── Member card ── */
+    .member-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;box-shadow:var(--shadow-xs);transition:all var(--t-normal);}
+    .member-card:hover{border-color:var(--green-light);box-shadow:var(--shadow-sm);}
+    .member-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--coral));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;flex-shrink:0;}
+    /* ── Bill preview ── */
+    .bill-preview{background:#fff;border:2px solid var(--border);border-radius:var(--radius-xl);padding:2rem;font-family:'Courier New',monospace;font-size:.8rem;line-height:1.8;}
+    .bill-preview .bill-header{text-align:center;border-bottom:2px solid #212121;padding-bottom:.75rem;margin-bottom:1rem;}
+    .bill-preview .bill-row{display:flex;justify-content:space-between;border-bottom:1px dotted #ddd;padding:.1rem 0;}
+    .bill-preview .bill-total{border-top:2px solid #212121;margin-top:.5rem;padding-top:.5rem;font-weight:700;font-size:.9rem;}
+    /* ── Rate card ── */
+    .rate-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+    /* ── Rate history table ── */
+    .rate-month-row{display:grid;grid-template-columns:100px repeat(5,1fr);gap:.5rem;padding:.5rem;border-bottom:1px solid var(--border);align-items:center;font-size:.8rem;}
+    .rate-month-row:nth-child(even){background:#FAFAFA;}
+    /* ── Status pill ── */
+    .status-active{background:#E8F5E9;color:var(--green-dark);border:1px solid var(--green-light);padding:.15rem .6rem;border-radius:var(--radius-full);font-size:.7rem;font-weight:700;}
+    .status-inactive{background:#EEEEEE;color:var(--text-3);border:1px solid var(--border);padding:.15rem .6rem;border-radius:var(--radius-full);font-size:.7rem;font-weight:700;}
+    /* ── Bill cards (Generate Bills) ── */
+    .bill-member-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.5rem;box-shadow:var(--shadow-xs);}
+    .bill-member-card .bmc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;}
+    .bill-member-card .bmc-name{font-weight:800;font-size:1.05rem;}
+    .bill-member-card .bmc-net{font-weight:800;font-size:.95rem;color:var(--green-dark);}
+    .bill-member-card .bmc-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-2);margin-bottom:.3rem;}
+    .bill-member-card .bmc-comm{color:var(--danger);}
+    .bill-member-card .bmc-lug{color:var(--warning);}
+    .bill-member-card .bmc-payable{font-weight:800;font-size:.95rem;border-top:1px solid var(--border);padding-top:.5rem;margin-top:.3rem;display:flex;justify-content:space-between;}
+    .bill-member-card .bmc-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:1rem;}
+    .bill-member-card .bmc-actions .btn-wa{background:#25D366;color:#fff;border:none;}
+    .bill-member-card .bmc-actions .btn-wa:hover{background:#1ea952;}
+    /* ── Bill detail modal ── */
+    .bill-detail-table{width:100%;border-collapse:collapse;font-size:.8rem;}
+    .bill-detail-table th{background:var(--green-dark);color:#fff;padding:.45rem .6rem;text-align:left;font-size:.72rem;}
+    .bill-detail-table td{padding:.4rem .6rem;border-bottom:1px solid var(--border);}
+    .bill-detail-table tr:nth-child(even) td{background:#FAFAFA;}
+    .no-entry-pill{background:#FFEBEE;color:var(--danger);border-radius:var(--radius-full);padding:.1rem .5rem;font-size:.68rem;font-weight:700;}
+    .has-entry-pill{background:#E8F5E9;color:var(--green-dark);border-radius:var(--radius-full);padding:.1rem .5rem;font-size:.68rem;font-weight:700;}
+    /* ── Date nav ── */
+    .date-nav{display:flex;align-items:center;gap:.5rem;}
+    .date-nav-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;transition:all var(--t-fast);}
+    .date-nav-btn:hover{border-color:var(--green);background:var(--green-xlight);}
+    /* ── Quick add member strip ── */
+    .quick-add-strip{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem;}
+    /* ── Audit log ── */
+    .audit-item{display:flex;gap:.75rem;align-items:flex-start;padding:.6rem 0;border-bottom:1px solid var(--border);}
+    .audit-icon{width:28px;height:28px;border-radius:50%;background:var(--green-xlight);display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;}
+    .audit-text{font-size:.8rem;color:var(--text-2);}
+    .audit-time{font-size:.7rem;color:var(--text-4);}
+    /* ── Print styles ── */
+    @media print{
+      .bill-preview{border:none;padding:0;font-size:12px;}
+      .bill-print-table{width:100%;border-collapse:collapse;}
+      .bill-print-table th,.bill-print-table td{border:1px solid #333;padding:4px 8px;text-align:left;font-size:11px;}
+      .bill-print-table th{background:#f0f0f0;font-weight:700;}
+      .bill-print-table td:last-child{text-align:right;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="flex items-center gap-3">
+      <div class="hamburger" id="sidebarToggle"><span></span><span></span><span></span></div>
+      <a href="index.html" class="logo-mark">
+        <img src="assets/logo.png" alt=""/>
+        <span class="logo-text hide-mobile">Flora<span style="color:var(--coral);">Chain</span></span>
+      </a>
+      <span class="badge badge-green hide-mobile">Agent Portal</span>
+    </div>
+    <div class="flex items-center gap-3" style="margin-left:auto;">
+      <div class="flex items-center gap-2 hide-mobile">
+        <span class="text-xs text-muted">Today:</span>
+        <span class="font-semi text-sm" id="todayDate"></span>
+      </div>
+      <div class="relative">
+        <button class="btn-icon notif-dot" onclick="document.getElementById('notifPanel').classList.toggle('open')">🔔</button>
+        <div class="notif-panel" id="notifPanel">
+          <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;">Notifications</div>
+          <div class="notif-item"><div class="notif-icon">📋</div><div><div class="notif-text">3 bills due for payment this week</div><div class="notif-time">Just now</div></div></div>
+          <div class="notif-item"><div class="notif-icon">🌸</div><div><div class="notif-text">Rose rate updated: ₹120/kg (+8.5%)</div><div class="notif-time">1 hr ago</div></div></div>
+          <div class="notif-item"><div class="notif-icon">💰</div><div><div class="notif-text">Payment received: Pooja Florals ₹8,400</div><div class="notif-time">2 hrs ago</div></div></div>
+        </div>
+      </div>
+      <div class="avatar" onclick="openModal('profileModal')" style="background:linear-gradient(135deg,var(--green),var(--green-dark));">SA</div>
+    </div>
+  </div>
+</header>
+
+<div id="sidebarOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;backdrop-filter:blur(4px);"></div>
+
+<div class="layout-wrapper">
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Overview</div>
+    <a class="sidebar-item active" onclick="showSection('dashboard')"><span class="s-icon">🏠</span>Dashboard</a>
+    <a class="sidebar-item" onclick="showSection('network')"><span class="s-icon">🌐</span>People (Network)</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Farmers</div>
+    <a class="sidebar-item" onclick="showSection('members')"><span class="s-icon">🌾</span>Farmer List<span class="sidebar-badge" id="memberCountBadge">0</span></a>
+    <a class="sidebar-item" onclick="openFarmerMap()"><span class="s-icon">📍</span>Farmer Locations</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Daily Work</div>
+    <a class="sidebar-item" onclick="showSection('entries')"><span class="s-icon">📝</span>Daily Entries</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Billing</div>
+    <a class="sidebar-item" onclick="showSection('rates')"><span class="s-icon">💲</span>Rate Management</a>
+    <a class="sidebar-item" onclick="showSection('bills')"><span class="s-icon">🧾</span>Generate Bills</a>
+    <a class="sidebar-item" onclick="showSection('history')"><span class="s-icon">📋</span>Bill History</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">System</div>
+    <a class="sidebar-item" onclick="showSection('settings')"><span class="s-icon">⚙️</span>Settings</a>
+    <a class="sidebar-item" href="index.html"><span class="s-icon">🔒</span>Sign Out</a>
+  </div>
+</nav>
+
+<main class="main-content">
+<div class="page-content" id="pageContent">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="sec-dashboard">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div><div class="page-title">Agent Dashboard 🌸</div><div class="page-subtitle" id="shopSubtitle">Suresh Flower Agencies · Bangalore</div></div>
+    <div class="flex gap-2">
+      <button class="btn btn-outline btn-sm" onclick="showSection('entries')">+ Daily Entry</button>
+      <button class="btn btn-cta btn-sm" onclick="showSection('bills')">Generate Bill</button>
+    </div>
+  </div>
+
+  <!-- Financial summary cards -->
+  <div class="grid grid-4 gap-4 mb-6">
+    <div class="stat-card"><div class="stat-label">💰 This Month Income</div><div class="stat-value green" id="dashIncome">₹0</div><div class="stat-change up" id="dashIncomeChange">↑ Calculating…</div></div>
+    <div class="stat-card coral" style="border-left-color:var(--danger);"><div class="stat-label">💸 Commission Paid</div><div class="stat-value" style="color:var(--danger);" id="dashComm">₹0</div><div class="stat-change" id="dashCommChange">This month</div></div>
+    <div class="stat-card blue"><div class="stat-label">📈 Net Revenue</div><div class="stat-value blue" id="dashNet">₹0</div><div class="stat-change up">After commission</div></div>
+    <div class="stat-card orange"><div class="stat-label">👥 Active Members</div><div class="stat-value" style="color:var(--warning);" id="dashMembers">0</div><div class="stat-change">Total registered</div></div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="flex justify-between items-center mb-4">
+        <div class="font-semi">Monthly Revenue Trend</div>
+        <span class="badge badge-green">Last 6 Months</span>
+      </div>
+      <div style="height:220px;"><canvas id="dashRevenueChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-3">Quick Stats</div>
+      <div style="display:flex;flex-direction:column;gap:.85rem;">
+        <div class="flex justify-between text-sm"><span class="text-muted">Bills Generated</span><span class="font-bold" id="qsBills">0</span></div>
+        <div class="flex justify-between text-sm"><span class="text-muted">Pending Bills</span><span class="font-bold text-danger" id="qsPending">0</span></div>
+        <div class="flex justify-between text-sm"><span class="text-muted">Total Entries</span><span class="font-bold" id="qsEntries">0</span></div>
+        <div class="flex justify-between text-sm"><span class="text-muted">Avg. Daily Qty</span><span class="font-bold" id="qsAvgQty">—</span></div>
+        <div class="divider" style="margin:.25rem 0;"></div>
+        <div class="flex justify-between text-sm"><span class="text-muted">Default Rate</span><span class="font-bold" id="qsRate">₹0/kg</span></div>
+        <div class="flex justify-between text-sm"><span class="text-muted">Commission</span><span class="font-bold" id="qsComm">0%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent activity -->
+  <div class="card">
+    <div class="flex justify-between items-center mb-4"><div class="font-semi">Recent Entries</div><button class="btn btn-outline btn-sm" onclick="showSection('entries')">View All →</button></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Member</th><th>Flower</th><th>Qty</th><th>Rate</th><th>Amount</th><th>Luggage</th></tr></thead>
+      <tbody id="recentEntriesTable"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ═══ NETWORK ═══ -->
+<div id="sec-network" style="display:none;">
+  <div class="page-header"><div class="page-title">🌐 Universal Discovery</div><div class="page-subtitle">Search, follow, and connect with everyone across FloraChain</div></div>
+  <div class="card mb-4">
+    <div class="flex gap-3 mb-2" style="flex-wrap:wrap;">
+      <div class="input-group" style="flex:1;min-width:200px;"><span class="input-icon">🔍</span><input class="form-input" id="netSearch" placeholder="Search by name, role, or location..." oninput="renderPeople()"/></div>
+      <select class="form-select" style="width:auto;" id="netRole" onchange="renderPeople()">
+        <option value="all">All Roles</option>
+        <option value="farmer">👨‍🌾 Farmers</option>
+        <option value="agent">🤝 Agents</option>
+        <option value="store">🏪 Store Owners</option>
+        <option value="vehicle">🚛 Vehicles & Drivers</option>
+      </select>
+    </div>
+  </div>
+  <div class="tabs mb-4">
+    <button class="tab-btn active" data-tab="net-all" onclick="renderPeople('all')">Discover People</button>
+    <button class="tab-btn" data-tab="net-conn" onclick="renderPeople('conn')">My Connections</button>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;" id="peopleGrid"></div>
+</div>
+
+<!-- ═══ FARMERS ═══ -->
+<div id="sec-members" style="display:none;">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div><div class="page-title">🌾 Farmer List</div><div class="page-subtitle">Add, edit and manage your registered farmers</div></div>
+    <label class="btn btn-outline btn-sm" title="Import CSV"><input type="file" accept=".csv" style="display:none;" onchange="importMembersCSV(this)"/>📥 Import CSV</label>
+  </div>
+  <!-- Quick-add inline strip -->
+  <div class="quick-add-strip">
+    <div style="font-weight:600;font-size:.88rem;white-space:nowrap;">Add Farmer</div>
+    <input class="form-input" id="qaStoreName" placeholder="Farmer Name" style="flex:1;min-width:130px;"/>
+    <input class="form-input" id="qaPhone" placeholder="Mobile Number" type="tel" maxlength="10" style="width:140px;"/>
+    <input class="form-input" id="qaLocation" placeholder="Location / Village" style="width:160px;"/>
+    <button class="btn btn-primary btn-sm" onclick="quickAddMember()">Add Farmer</button>
+    <button class="btn btn-outline btn-sm" onclick="openModal('addMemberModal')">More Options…</button>
+  </div>
+  <div class="flex gap-3 mb-4" style="flex-wrap:wrap;">
+    <div class="input-group" style="flex:1;min-width:200px;">
+      <span class="input-icon">🔍</span>
+      <input class="form-input" placeholder="Search by name, mobile or village…" id="memberSearch" oninput="renderMembers()"/>
+    </div>
+    <select class="form-select" style="width:auto;" id="memberFilter" onchange="renderMembers()">
+      <option value="all">All Status</option>
+      <option value="active">Active Only</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;" id="membersGrid"></div>
+</div>
+
+<!-- ═══ DAILY ENTRIES ═══ -->
+<div id="sec-entries" style="display:none;">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div><div class="page-title">📝 Daily Entries</div><div class="page-subtitle">Record daily flower weights per farmer</div></div>
+    <div class="flex gap-2 items-center">
+      <button class="btn btn-outline btn-sm" onclick="showSection('rates')">⚙️ Manage Rates</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAllEntries()">💾 Save All</button>
+    </div>
+  </div>
+  <!-- Date Navigation Bar -->
+  <div class="card mb-4" style="padding:.85rem 1.25rem;">
+    <div class="flex justify-between items-center flex-wrap gap-3">
+      <div class="date-nav">
+        <div class="date-nav-btn" onclick="changeEntryDate(-1)" title="Previous Day">‹</div>
+        <input type="date" class="form-input" id="entryDate" style="width:auto;" onchange="renderEntryGrid()"/>
+        <div class="date-nav-btn" onclick="changeEntryDate(1)" title="Next Day">›</div>
+      </div>
+      <div class="flex gap-3 items-center flex-wrap">
+        <select class="form-select" style="width:auto;" id="entryFlower" onchange="renderEntryGrid()">
+          <option value="Rose">🌸 Rose</option>
+          <option value="Marigold">🌼 Marigold</option>
+          <option value="Jasmine">⚪ Jasmine</option>
+          <option value="Gerbera">🌺 Gerbera</option>
+          <option value="Lotus">🪷 Lotus</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="autoFillZero()">Auto-fill 0 for missing</button>
+        <!-- Day summary badge -->
+        <div style="background:var(--green-xlight);border:1px solid var(--green-light);border-radius:var(--radius-md);padding:.35rem .85rem;font-size:.8rem;font-weight:700;color:var(--green-dark);" id="dayWeightBadge">Total: 0 kg</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="overflow:auto;max-height:520px;">
+      <table class="entry-table" id="entryGrid">
+        <thead id="entryHead"></thead>
+        <tbody id="entryBody"></tbody>
+        <tfoot id="entryFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RATE MANAGEMENT ═══ -->
+<div id="sec-rates" style="display:none;">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div><div class="page-title">💲 Rate Management</div><div class="page-subtitle">Set default & member-specific override rates</div></div>
+    <button class="btn btn-primary" onclick="openModal('addRateModal')">+ Add Rate Override</button>
+  </div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="font-semi mb-4">Default Flower Rates</div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;" id="defaultRatesList"></div>
+      <button class="btn btn-outline-green btn-sm mt-4" onclick="openModal('editDefaultRateModal')">✏️ Edit Default Rates</button>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-4">Commission Settings</div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="form-group"><label class="form-label">Global Commission Type</label><select class="form-select" id="globalCommType"><option value="percent">Percentage (%)</option><option value="fixed">Fixed (₹)</option></select></div>
+        <div class="form-group"><label class="form-label">Global Commission Value</label><div class="input-group"><span class="input-icon" id="commIcon">%</span><input type="number" class="form-input" id="globalCommValue" value="5" step="0.5"/></div></div>
+        <button class="btn btn-primary" onclick="saveGlobalComm()">Save Commission Settings</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="font-semi mb-4">Member-Specific Rate Overrides</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Member</th><th>Flower</th><th>Override Rate</th><th>From</th><th>To</th><th>Actions</th></tr></thead>
+      <tbody id="overridesTable"></tbody>
+    </table></div>
+    <div class="text-muted text-sm mt-3 p-2" id="noOverrideMsg">No overrides set — all members use default rates.</div>
+  </div>
+</div>
+
+<!-- ═══ GENERATE BILLS ═══ -->
+<div id="sec-bills" style="display:none;">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div><div class="page-title">🧾 Generate Bills</div><div class="page-subtitle">Calculate and share bills for all members</div></div>
+    <button class="btn btn-outline btn-sm" onclick="exportAllBills()">📥 Export CSV</button>
+  </div>
+  <!-- Filters bar -->
+  <div class="card mb-4" style="padding:.85rem 1.25rem;">
+    <div class="flex gap-3 items-center flex-wrap">
+      <div class="flex items-center gap-2">
+        <label class="text-sm font-semi" style="white-space:nowrap;">Month:</label>
+        <input type="month" class="form-input" id="billMonthPicker" style="width:auto;" onchange="renderBillCards()"/>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-sm font-semi" style="white-space:nowrap;">Period:</label>
+        <select class="form-select" id="billPeriodPicker" style="width:auto;" onchange="renderBillCards()">
+          <option value="monthly">Monthly (1–End)</option>
+          <option value="first_half">1st Half (1–15)</option>
+          <option value="second_half" selected>2nd Half (16–End)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="renderBillCards()">🔄 Refresh Bills</button>
+    </div>
+  </div>
+  <!-- Bill Cards Grid -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;" id="billCardsGrid"></div>
+</div>
+
+<!-- ═══ BILL HISTORY ═══ -->
+<div id="sec-history" style="display:none;">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div><div class="page-title">📋 Bill History</div><div class="page-subtitle">Filter, print and manage all generated bills</div></div>
+    <button class="btn btn-outline btn-sm" onclick="exportAllBills()">📥 Export All</button>
+  </div>
+  <div class="card mb-4" style="padding:.85rem 1.25rem;">
+    <div class="flex gap-3 items-center flex-wrap">
+      <div class="input-group" style="flex:1;min-width:180px;"><span class="input-icon">🔍</span><input class="form-input" placeholder="Search by farmer or bill no…" id="billSearch" oninput="renderBillHistory()"/></div>
+      <select class="form-select" style="width:auto;" id="billStatusFilter" onchange="renderBillHistory()">
+        <option value="all">All Status</option>
+        <option value="paid">Paid</option>
+        <option value="draft">Draft</option>
+        <option value="sent">Sent</option>
+        <option value="overdue">Overdue</option>
+      </select>
+      <!-- Flower type filter -->
+      <select class="form-select" style="width:auto;" id="billFlowerFilter" onchange="renderBillHistory()">
+        <option value="all">All Flowers</option>
+        <option value="Rose">🌸 Rose Only</option>
+        <option value="Marigold">🌼 Marigold Only</option>
+        <option value="Jasmine">⚪ Jasmine Only</option>
+        <option value="Gerbera">🌺 Gerbera Only</option>
+        <option value="Lotus">🪷 Lotus Only</option>
+      </select>
+      <input type="month" class="form-input" id="billHistoryMonthFilter" style="width:auto;" onchange="renderBillHistory()" title="Filter by month"/>
+    </div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Bill No.</th><th>Farmer</th><th>Period</th><th>Flower</th><th>Total Weight</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="billHistoryTable"></tbody>
+  </table></div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div id="sec-settings" style="display:none;">
+  <div class="page-header"><div class="page-title">⚙️ Billing Settings</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div class="card">
+      <div class="font-semi mb-4">Shop / Business Details</div>
+      <div style="display:flex;flex-direction:column;gap:.85rem;">
+        <div class="form-group"><label class="form-label">Shop Name</label><input class="form-input" id="settShopName" placeholder="Suresh Flower Agencies"/></div>
+        <div class="form-group"><label class="form-label">Owner / Proprietor Name</label><input class="form-input" id="settOwnerName" placeholder="Suresh Kumar"/></div>
+        <div class="form-group"><label class="form-label">Address</label><textarea class="form-textarea" id="settAddress" rows="2" placeholder="Full address…"></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Mobile</label><input class="form-input" id="settPhone" placeholder="+91 98765 43210"/></div>
+          <div class="form-group"><label class="form-label">GST No. (optional)</label><input class="form-input" id="settGST" placeholder="29AAAAA0000A1Z5"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">UPI ID</label><input class="form-input" id="settUPI" placeholder="suresh.agency@upi"/></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-4">Billing Defaults</div>
+      <div style="display:flex;flex-direction:column;gap:.85rem;">
+        <div class="form-group">
+          <label class="form-label">Default Rate (per kg)</label>
+          <input type="number" class="form-input" id="settDefaultRate" value="120"/>
+          <div class="text-xs text-muted mt-1">This is the default rate. You can override it per-day in the Daily Entries tab.</div>
+        </div>
+        <!-- Commission Deduction (radio like reference) -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;">
+          <div class="flex justify-between items-center mb-2">
+            <div class="font-semi text-sm">Commission Deduction</div>
+            <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;"><input type="checkbox" id="settCommEnabled" checked onchange="toggleCommSection()"/> Enable</label>
+          </div>
+          <div id="commSection">
+            <div class="form-label mb-1">Commission Type</div>
+            <div style="display:flex;gap:1.5rem;margin-bottom:.75rem;">
+              <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;"><input type="radio" name="settCommType" id="settCommFixed" value="fixed" onchange="updateCommIcon()"/> Fixed Amount (₹)</label>
+              <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;"><input type="radio" name="settCommType" id="settCommPct" value="percent" checked onchange="updateCommIcon()"/> Percentage (%)</label>
+            </div>
+            <div class="form-group"><label class="form-label" id="commValueLabel">Percentage Value (%)</label><input type="number" class="form-input" id="settCommValue" value="5" step="0.5"/></div>
+          </div>
+        </div>
+        <!-- Luggage Charge (like reference) -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;">
+          <div class="flex justify-between items-center mb-2">
+            <div class="font-semi text-sm">Luggage Charge Deduction</div>
+            <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;"><input type="checkbox" id="settLugEnabled" checked/> Enable</label>
+          </div>
+          <div class="form-group"><label class="form-label">Luggage Rate (per Kg)</label><input type="number" class="form-input" id="settLugRate" value="0" step="0.5" placeholder="0"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Default Flower</label><select class="form-select" id="settDefaultFlower"><option>Rose</option><option>Marigold</option><option>Jasmine</option><option>Gerbera</option></select></div>
+        <div class="form-group"><label class="form-label">Billing Preference</label><select class="form-select" id="settBillPref"><option value="monthly">Monthly</option><option value="half">Half-Monthly</option></select></div>
+      </div>
+    </div>
+    <div class="card" style="grid-column:1/-1;">
+      <div class="flex justify-between items-center mb-3">
+        <div class="font-semi">Activity &amp; Audit Logs</div>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('auditLog').style.display=document.getElementById('auditLog').style.display==='none'?'block':'none'">View Logs</button>
+      </div>
+      <div id="auditLog" style="display:none;max-height:200px;overflow-y:auto;" class="mb-4" id="auditLogList"></div>
+    </div>
+    <div class="card" style="grid-column:1/-1;">
+      <div class="flex gap-3">
+        <button class="btn btn-primary flex-1" onclick="saveSettings()">💾 Save All Settings</button>
+        <button class="btn btn-outline flex-1" onclick="resetToDefaults()">↩ Reset Defaults</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- page-content -->
+</main>
+</div><!-- layout-wrapper -->
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <div class="bottom-nav-item active" onclick="showSection('dashboard')"><span class="nav-icon">🏠</span>Home</div>
+    <div class="bottom-nav-item" onclick="showSection('members')"><span class="nav-icon">👥</span>Members</div>
+    <div class="bottom-nav-item" onclick="showSection('entries')"><span class="nav-icon">📝</span>Entries</div>
+    <div class="bottom-nav-item" onclick="showSection('network')"><span class="nav-icon">🌐</span>People</div>
+    <div class="bottom-nav-item" onclick="showSection('bills')"><span class="nav-icon">🧾</span>Bills</div>
+    <div class="bottom-nav-item" onclick="showSection('settings')"><span class="nav-icon">⚙️</span>Settings</div>
+  </div>
+</nav>
+
+<!-- ══ MODALS ══ -->
+<!-- Add Farmer (full form) -->
+<div class="modal-overlay" id="addMemberModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🌾 Add New Farmer</div><button class="modal-close" onclick="closeModal('addMemberModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:.85rem;">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Farmer Name *</label><input class="form-input" id="mStoreName" placeholder="Ramesh Kumar"/></div>
+        <div class="form-group"><label class="form-label">Mobile Number *</label><input class="form-input" type="tel" id="mPhone" placeholder="98765 43210" maxlength="10"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Location / Village *</label><input class="form-input" id="mLocation" placeholder="Hosur, Krishnagiri"/></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="mStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Full Address</label><textarea class="form-textarea" id="mAddress" rows="2" placeholder="Full address, landmark…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Billing Cycle</label><select class="form-select" id="mBillingCycle"><option value="monthly">Monthly</option><option value="first_half">1st Half (1–15)</option><option value="second_half">2nd Half (16–End)</option></select></div>
+        <div class="form-group"><label class="form-label">Commission Value (%)</label><input type="number" class="form-input" id="mCommValue" value="5" step="0.5"/></div>
+      </div>
+      <input type="hidden" id="mCommType" value="percent"/>
+      <input type="hidden" id="mOwnerName" value=""/>
+      <button class="btn btn-cta btn-lg w-full" onclick="saveMember()">Add Farmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Rate View Modal -->
+<div class="modal-overlay" id="monthlyRateModal">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header"><div class="modal-title">📅 Monthly Rate History</div><button class="modal-close" onclick="closeModal('monthlyRateModal')">✕</button></div>
+    <div class="flex gap-3 mb-4">
+      <select class="form-select" style="width:auto;" id="mrMonth"></select>
+      <select class="form-select" style="width:auto;" id="mrYear"></select>
+      <button class="btn btn-primary btn-sm" onclick="renderMonthlyRates()">View Rates</button>
+    </div>
+    <div id="monthlyRateContent"></div>
+  </div>
+</div>
+
+<!-- Bill Detail Modal (date-by-date view like reference) -->
+<div class="modal-overlay" id="billDetailModal">
+  <div class="modal" style="max-width:700px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="bdTitle">Bill Details</div>
+        <div class="text-xs text-muted" id="bdPeriod"></div>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-cta btn-sm" onclick="printCurrentBillDetail()">🖨️ Print</button>
+        <button class="modal-close" onclick="closeModal('billDetailModal')">✕</button>
+      </div>
+    </div>
+    <div id="billDetailContent"></div>
+  </div>
+</div>
+
+<!-- New Bill Config Modal -->
+<div class="modal-overlay" id="newBillConfigModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🧾 Configure New Bill</div><button class="modal-close" onclick="closeModal('newBillConfigModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-group"><label class="form-label">Select Member</label><select class="form-select" id="billMember"><option value="">— Choose Member —</option></select></div>
+      <div class="form-group"><label class="form-label">Billing Period</label>
+        <select class="form-select" id="billPeriod" onchange="updateBillDates()">
+          <option value="monthly">Monthly (1–End)</option>
+          <option value="first_half">1st Half (1–15)</option>
+          <option value="second_half">2nd Half (16–End)</option>
+          <option value="custom">Custom Range</option>
+        </select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Month</label><select class="form-select" id="billMonth" onchange="updateBillDates()"></select></div>
+        <div class="form-group"><label class="form-label">Year</label><select class="form-select" id="billYear" onchange="updateBillDates()"></select></div>
+      </div>
+      <div id="customDateRow" style="display:none;" class="form-row">
+        <div class="form-group"><label class="form-label">From</label><input type="date" class="form-input" id="billFrom"/></div>
+        <div class="form-group"><label class="form-label">To</label><input type="date" class="form-input" id="billTo"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Extra Luggage / Misc Charges (₹)</label><input type="number" class="form-input" id="billLuggage" value="0"/></div>
+      <div class="form-group"><label class="form-label">Commission Override (blank = member default)</label><div class="input-group"><input type="number" class="form-input" id="billCommOverride" placeholder="e.g. 5"/><span class="input-suffix">%</span></div></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="billNotes" rows="2" placeholder="Optional…"></textarea></div>
+      <div class="flex gap-2">
+        <button class="btn btn-primary flex-1" onclick="generateAndSaveBill()">💾 Generate &amp; Save</button>
+        <button class="btn btn-cta flex-1" onclick="printBill()">🖨️ Preview &amp; Print</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Farmer -->
+<div class="modal-overlay" id="editMemberModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">✏️ Edit Farmer</div><button class="modal-close" onclick="closeModal('editMemberModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:.85rem;">
+      <input type="hidden" id="eMemberId"/>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Farmer Name</label><input class="form-input" id="eStoreName"/></div>
+        <div class="form-group"><label class="form-label">Mobile Number</label><input class="form-input" id="ePhone"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Location / Village</label><input class="form-input" id="eLocation"/></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="eStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Full Address</label><textarea class="form-textarea" id="eAddress" rows="2"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Billing Cycle</label><select class="form-select" id="eBillingCycle"><option value="monthly">Monthly</option><option value="first_half">1st Half</option><option value="second_half">2nd Half</option></select></div>
+        <div class="form-group"><label class="form-label">Commission % (Default)</label><input type="number" class="form-input" id="eCommValue" step="0.5"/></div>
+      </div>
+      <input type="hidden" id="eCommType" value="percent"/>
+      <input type="hidden" id="eOwnerName" value=""/>
+      <div class="flex gap-3">
+        <button class="btn btn-primary flex-1" onclick="updateMember()">Update</button>
+        <button class="btn btn-danger-ghost flex-1" onclick="deleteMember()">Delete Farmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rate override modal removed (now inline in rate section) -->
+
+<!-- Edit Default Rates -->
+<div class="modal-overlay" id="editDefaultRateModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📊 Edit Default Rates</div><button class="modal-close" onclick="closeModal('editDefaultRateModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:.85rem;" id="defaultRateForm"></div>
+    <button class="btn btn-primary btn-lg w-full mt-4" onclick="saveDefaultRates()">Save Rates</button>
+  </div>
+</div>
+
+<!-- Profile -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Agent Profile</div><button class="modal-close" onclick="closeModal('profileModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,var(--green),var(--green-dark));">SA</div>
+      <div class="font-bold text-xl" id="profileName">Suresh Agencies</div>
+      <div class="text-sm text-muted" id="profileSub">🤝 Agent · Bangalore, KA</div>
+      <span class="badge badge-green mt-2">KYC Verified</span>
+    </div>
+    <div class="flex gap-3 mt-4" style="flex-wrap:wrap;"><button class="btn btn-primary w-full" onclick="closeModal('profileModal');showSection('settings')">Edit Settings</button><a href="index.html" class="btn btn-danger-ghost w-full">Sign Out</a></div>
+  </div>
+</div>
+
+<!-- Connect Modal -->
+<div class="modal-overlay" id="connectModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🤝 Send Connection Request</div><button class="modal-close" onclick="closeModal('connectModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div id="connectTarget" class="font-semi text-center pb-2 border-b border-gray">Connecting...</div>
+      <div class="form-group"><label class="form-label">Purpose of Connection</label>
+        <select class="form-select" id="connPurpose">
+          <option value="buying">Buying / Sourcing Flowers</option>
+          <option value="selling">Selling / Supplying Flowers</option>
+          <option value="transport">Booking Transport</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Requested Settlement Cycle</label>
+        <select class="form-select" id="connBilling">
+          <option value="daily">Daily Settlement</option>
+          <option value="half_month">15-Day (Half-Month)</option>
+          <option value="monthly">Monthly Settlement</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Message (Optional)</label>
+        <textarea class="form-input" id="connMsg" rows="2" placeholder="Let's do business together..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-lg w-full" onclick="confirmConnection()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Modal -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal" style="width:400px;padding:0;overflow:hidden;display:flex;flex-direction:column;height:80vh;max-height:600px;">
+    <div style="padding:1rem 1.5rem;background:var(--bg);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div class="font-semi" id="chatTitle">Direct Message</div>
+      <button class="modal-close" onclick="closeModal('chatModal')">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:1rem;background:#f9fafb;display:flex;flex-direction:column;gap:1rem;" id="chatMsgs">
+      <div class="text-center text-xs text-muted mb-2">Today</div>
+    </div>
+    <div style="padding:1rem;border-top:1px solid var(--border);background:#fff;display:flex;gap:.5rem;">
+      <input type="text" class="form-input" style="flex:1;" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()"/>
+      <button class="btn btn-primary" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Detail Modal -->
+<div class="modal-overlay" id="profileDetailModal" onclick="if(event.target===this) closeModal('profileDetailModal')">
+  <div class="modal" style="max-width:550px;">
+    <div class="modal-header"><div class="modal-title">👤 Profile Showcase</div><button class="modal-close" onclick="closeModal('profileDetailModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,var(--blue),#0D47A1);" id="pdAvatar">P</div>
+      <div class="font-bold text-xl" id="pdName">Name</div>
+      <div class="text-sm text-muted"><span id="pdRole">Role</span> · <span id="pdLoc">Location</span></div>
+    </div>
+    <div style="background:#f9fafb;border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;" id="pdDetails">
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-primary flex-1" onclick="closeModal('profileDetailModal');openModal('connectModal')">🤝 Request Connection</button>
+      <button class="btn btn-outline flex-1" onclick="closeModal('profileDetailModal')">Back</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="assets/dashboard.js"></script>
+<script src="assets/agent-billing.js"></script>
+<script src="assets/agent-billing-addons.js"></script>
+<script src="assets/network.js"></script>
+<script>
+window.sections.push('network');
+</script>
+</body>
+</html>

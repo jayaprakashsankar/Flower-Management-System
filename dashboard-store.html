@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Store Owner Dashboard — FloraChain</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="assets/logo.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="flex items-center gap-4">
+        <div class="hamburger" id="sidebarToggle"><span></span><span></span><span></span></div>
+        <a href="index.html" class="logo-mark"><img src="assets/logo.png" alt="FloraChain"/><span class="logo-text hide-mobile">FloraChain</span></a>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <button class="btn-icon notif-dot" onclick="document.getElementById('notifPanel').classList.toggle('open')">🔔</button>
+          <div class="notif-panel" id="notifPanel">
+            <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;">Notifications</div>
+            <div class="notif-item"><div class="notif-icon">🔔</div><div><div class="notif-text">Stock is running low on Jasmine</div><div class="notif-time">Just now</div></div></div>
+            <div class="notif-item"><div class="notif-icon">📦</div><div><div class="notif-text">Rose delivery is 5 mins away</div><div class="notif-time">1 hr ago</div></div></div>
+          </div>
+        </div>
+        <div class="avatar" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);" onclick="openModal('profileModal')">PF</div>
+      </div>
+    </div>
+  </header>
+
+  <div id="sidebarOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:150;backdrop-filter:blur(4px);"></div>
+
+  <div class="layout-wrapper">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <a class="sidebar-item active" onclick="switchSection('overview')"><span class="s-icon">🏠</span> Overview</a>
+        <a class="sidebar-item" onclick="switchSection('catalogue')"><span class="s-icon">🌸</span> Flower Catalogue</a>
+        <a class="sidebar-item" onclick="switchSection('orders')"><span class="s-icon">📦</span> My Orders <span class="sidebar-badge">3</span></a>
+        <a class="sidebar-item" onclick="switchSection('network')"><span class="s-icon">🌐</span> People (Network)</a>
+        <a class="sidebar-item" onclick="switchSection('tracking')"><span class="s-icon">🚚</span> Live Tracking</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Finance</div>
+        <a class="sidebar-item" onclick="switchSection('ledger')"><span class="s-icon">💰</span> Ledger</a>
+        <a class="sidebar-item" onclick="switchSection('payments')"><span class="s-icon">💳</span> Payments</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Market</div>
+        <a class="sidebar-item" onclick="switchSection('market')"><span class="s-icon">📊</span> Market Rates</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Account</div>
+        <a class="sidebar-item" onclick="openModal('profileModal')"><span class="s-icon">⚙️</span> Settings / Profile</a>
+        <a class="sidebar-item" href="index.html"><span class="s-icon">🔒</span> Sign Out</a>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="page-content">
+
+        <!-- OVERVIEW -->
+        <div id="sec-overview">
+          <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+            <div><div class="page-title">Store Dashboard 🏪</div><div class="page-subtitle">Pooja Florals · Bangalore, Karnataka</div></div>
+            <button class="btn btn-primary" onclick="switchSection('catalogue')">+ Order Flowers</button>
+          </div>
+          <div class="grid grid-4 gap-4 mb-6">
+            <div class="stat-card"><div class="stat-label">Total Spent (Mar)</div><div class="stat-value text-warning">₹82,400</div><div class="stat-change up">▲ 12% vs Feb</div></div>
+            <div class="stat-card accent"><div class="stat-label">Sales Revenue</div><div class="stat-value text-accent">₹1,24,600</div><div class="stat-change up">▲ 19% vs Feb</div></div>
+            <div class="stat-card"><div class="stat-label">Store Profit</div><div class="stat-value text-green">₹42,200</div><div class="stat-change up">▲ 31% vs Feb</div></div>
+            <div class="stat-card info"><div class="stat-label">Active Orders</div><div class="stat-value">3</div></div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+            <div class="card">
+              <div class="flex justify-between items-center mb-4"><div class="font-semi">Monthly Spend vs Revenue</div></div>
+              <div style="height:220px;"><canvas id="storeRevChart"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="font-semi mb-3">🌸 Stock Status</div>
+              <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                <div><div class="flex justify-between text-sm mb-1"><span>Rose</span><span class="font-bold">8 kg</span></div><div class="progress-bar"><div class="progress-fill" style="width:35%;"></div></div><div class="text-xs text-muted mt-1 text-right text-warning">Low Stock</div></div>
+                <div><div class="flex justify-between text-sm mb-1"><span>Jasmine</span><span class="font-bold">2 kg</span></div><div class="progress-bar"><div class="progress-fill danger" style="width:15%;background:var(--danger);"></div></div><div class="text-xs text-muted mt-1 text-right" style="color:var(--danger);">Critical</div></div>
+                <div><div class="flex justify-between text-sm mb-1"><span>Marigold</span><span class="font-bold">25 kg</span></div><div class="progress-bar"><div class="progress-fill" style="width:78%;"></div></div><div class="text-xs text-muted mt-1 text-right text-green">Good</div></div>
+                <div><div class="flex justify-between text-sm mb-1"><span>Lotus</span><span class="font-bold">60 pcs</span></div><div class="progress-bar"><div class="progress-fill accent" style="width:55%;background:var(--accent);"></div></div><div class="text-xs">Moderate</div></div>
+                <button class="btn btn-primary btn-sm mt-2" onclick="switchSection('catalogue')">Reorder Now →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Supplier billing transparency -->
+          <div class="card">
+            <div class="font-semi mb-3">Supplier Billing Cycles <span class="text-muted text-xs">(Transparency before ordering)</span></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Supplier</th><th>Type</th><th>Billing Cycle</th><th>Days Until Payment</th><th>Outstanding</th><th>Order</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="font-semi">Suresh Agencies</div></td><td><span class="badge badge-blue">Agent</span></td><td><span class="badge badge-green">15 Days</span></td><td class="text-sm">8 days</td><td class="font-bold text-success">₹0</td><td><button class="btn btn-primary btn-sm" onclick="showToast('Opening catalogue...','info');switchSection('catalogue')">Order</button></td></tr>
+                  <tr><td><div class="font-semi">Ramesh Kumar</div></td><td><span class="badge badge-green">Farmer</span></td><td><span class="badge badge-amber">Monthly</span></td><td class="text-sm">23 days</td><td class="font-bold text-warning">₹12,000</td><td><button class="btn btn-primary btn-sm">Order</button></td></tr>
+                  <tr><td><div class="font-semi">Lotus Gardens</div></td><td><span class="badge badge-green">Farmer</span></td><td><span class="badge badge-blue">10 Days</span></td><td class="text-sm">3 days</td><td class="font-bold text-warning">₹5,800</td><td><button class="btn btn-ghost btn-sm">Settle First</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ NETWORK ═══ -->
+        <div id="sec-network" style="display:none;">
+          <div class="page-header"><div class="page-title">🌐 Universal Discovery</div><div class="page-subtitle">Search, follow, and connect with everyone across FloraChain</div></div>
+          <div class="card mb-4">
+            <div class="flex gap-3 mb-2" style="flex-wrap:wrap;">
+              <div class="input-group" style="flex:1;min-width:200px;"><span class="input-icon">🔍</span><input class="form-input" id="netSearch" placeholder="Search by name, role, or location..." oninput="renderPeople()"/></div>
+              <select class="form-select" style="width:auto;" id="netRole" onchange="renderPeople()">
+                <option value="all">All Roles</option>
+                <option value="farmer">👨‍🌾 Farmers</option>
+                <option value="agent">🤝 Agents</option>
+                <option value="store">🏪 Store Owners</option>
+                <option value="vehicle">🚛 Vehicles/Drivers</option>
+                <option value="customer">👥 Customers</option>
+              </select>
+            </div>
+          </div>
+          <div class="tabs mb-4">
+            <button class="tab-btn active" data-tab="net-all" onclick="renderPeople('all')">Discover People</button>
+            <button class="tab-btn" data-tab="net-conn" onclick="renderPeople('conn')">My Connections</button>
+          </div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;" id="peopleGrid"></div>
+        </div>
+
+        <!-- CATALOGUE -->
+        <div id="sec-catalogue" style="display:none;">
+          <div class="page-header"><div class="page-title">🌸 Flower Catalogue</div><div class="page-subtitle">Browse and book fresh flowers from verified suppliers</div></div>
+          <div class="flex gap-3 mb-4" style="flex-wrap:wrap;">
+            <input class="form-input" style="max-width:240px;" placeholder="🔍 Search flowers or suppliers..."/>
+            <select class="form-select" style="width:auto;"><option>All Types</option><option>Rose</option><option>Marigold</option><option>Jasmine</option></select>
+            <select class="form-select" style="width:auto;"><option>All Suppliers</option><option>Agents Only</option><option>Farmers Only</option></select>
+          </div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.25rem;" id="storeCatalogGrid"></div>
+        </div>
+
+        <!-- ORDERS -->
+        <div id="sec-orders" style="display:none;">
+          <div class="page-header"><div class="page-title">📦 My Orders</div></div>
+          <div class="tabs"><button class="tab-btn active" data-tab="ord-active">Active (3)</button><button class="tab-btn" data-tab="ord-past">History (42)</button></div>
+          <div class="tab-content active" id="ord-active">
+            <div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem;">
+              <div class="card"><div class="flex justify-between items-center" style="flex-wrap:wrap;gap:0.75rem;"><div><div class="font-semi">Order #FC-4821 · Rose 30kg</div><div class="text-xs text-muted mt-1">Supplier: Suresh Agencies · Billing: 15 Days</div></div><div class="flex gap-2 items-center"><span class="badge badge-amber">In Transit</span><button class="btn btn-ghost btn-sm" onclick="switchSection('tracking')">Track →</button></div></div></div>
+              <div class="card"><div class="flex justify-between items-center" style="flex-wrap:wrap;gap:0.75rem;"><div><div class="font-semi">Order #FC-4819 · Jasmine 5kg</div><div class="text-xs text-muted mt-1">Supplier: Ramesh Kumar · Billing: Monthly</div></div><div class="flex gap-2 items-center"><span class="badge badge-blue">Scheduled</span><button class="btn btn-ghost btn-sm">Track →</button></div></div></div>
+              <div class="card"><div class="flex justify-between items-center" style="flex-wrap:wrap;gap:0.75rem;"><div><div class="font-semi">Order #FC-4817 · Lotus 200pcs</div><div class="text-xs text-muted mt-1">Supplier: Lotus Gardens · Billing: 10 Days</div></div><div class="flex gap-2 items-center"><span class="badge badge-blue">Confirmed</span><button class="btn btn-ghost btn-sm">Track →</button></div></div></div>
+            </div>
+          </div>
+          <div class="tab-content" id="ord-past"><div class="text-muted p-4 text-sm">42 past orders available for download</div></div>
+        </div>
+
+        <!-- LIVE TRACKING -->
+        <div id="sec-tracking" style="display:none;">
+          <div class="page-header"><div class="page-title">🚚 Live Delivery Tracking</div></div>
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+            <div class="card">
+              <div class="flex justify-between mb-4"><div class="font-semi">Order #FC-4821 · Rose 30kg</div><span class="badge badge-amber">In Transit</span></div>
+              <div class="tracker-line">
+                <div class="tracker-event"><div class="tracker-dot done"></div><div class="tracker-info"><div class="tracker-title">✅ Order Confirmed</div><div class="tracker-time">25 Mar · 10:00 PM</div></div></div>
+                <div class="tracker-event"><div class="tracker-dot done"></div><div class="tracker-info"><div class="tracker-title">✅ Dispatched from Farm</div><div class="tracker-time">26 Mar · 6:30 AM · Mysuru</div></div></div>
+                <div class="tracker-event"><div class="tracker-dot active"></div><div class="tracker-info"><div class="tracker-title">🔴 In Transit · 45 km away</div><div class="tracker-time">ETA: 9:30 AM · Driver: Arjun S.</div></div></div>
+                <div class="tracker-event"><div class="tracker-dot"></div><div class="tracker-info"><div class="tracker-title">⏳ Delivery to Store</div><div class="tracker-time">Your store · Bangalore</div></div></div>
+                <div class="tracker-event"><div class="tracker-dot"></div><div class="tracker-info"><div class="tracker-title">⏳ Payment Due</div><div class="tracker-time">Billing: 15 days · Due: 10 Apr</div></div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="font-semi mb-3">Driver Info</div>
+              <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                <div class="flex gap-3 items-center"><div class="avatar" style="width:48px;height:48px;background:linear-gradient(135deg,#1a7a4a,#2ea06b);">AS</div><div><div class="font-semi">Arjun Sharma</div><div class="text-xs text-muted">⭐ 4.8 · 342 trips</div></div></div>
+                <div class="divider"></div>
+                <div class="flex justify-between text-sm"><span class="text-muted">Vehicle</span><span>Mini Van · TN-09-AX-2341</span></div>
+                <div class="flex justify-between text-sm"><span class="text-muted">Distance Remaining</span><span>45 km</span></div>
+                <div class="flex justify-between text-sm"><span class="text-muted">ETA</span><span class="text-success font-semi">9:30 AM</span></div>
+                <button class="btn btn-primary" onclick="showToast('Calling Arjun...','info')">📞 Call Driver</button>
+                <button class="btn btn-ghost" onclick="showToast('Chat opened!','info')">💬 Chat with Driver</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEDGER -->
+        <div id="sec-ledger" style="display:none;">
+          <div class="page-header"><div class="page-title">💰 Financial Ledger</div></div>
+          <div class="grid grid-4 gap-4 mb-6">
+            <div class="stat-card"><div class="stat-label">Purchases</div><div class="stat-value text-warning">₹82,400</div></div>
+            <div class="stat-card accent"><div class="stat-label">Sales</div><div class="stat-value text-accent">₹1,24,600</div></div>
+            <div class="stat-card"><div class="stat-label">Profit</div><div class="stat-value text-green">₹42,200</div></div>
+            <div class="stat-card info"><div class="stat-label">Pending Bills</div><div class="stat-value text-warning">₹17,800</div></div>
+          </div>
+          <div class="card mb-4"><div style="height:260px;"><canvas id="storeLedgerChart"></canvas></div></div>
+          <div class="card">
+            <div class="flex justify-between items-center mb-4"><div class="font-semi">Transactions</div><button class="btn btn-ghost btn-sm" onclick="showToast('Exporting CSV...','info')">Export</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Date</th><th>Item</th><th>Supplier</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead><tbody id="storeTxTable"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- PAYMENTS -->
+        <div id="sec-payments" style="display:none;">
+          <div class="page-header"><div class="page-title">💳 Payments</div></div>
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+            <div class="card">
+              <div class="font-semi mb-4">Pay Supplier</div>
+              <div style="display:flex;flex-direction:column;gap:1rem;">
+                <div class="form-group"><label class="form-label">Supplier</label><select class="form-select"><option>Suresh Agencies</option><option>Ramesh Kumar</option><option>Lotus Gardens</option></select></div>
+                <div class="form-group"><label class="form-label">Amount (₹)</label><div class="input-group"><span class="input-icon">₹</span><input type="number" class="form-input" placeholder="12000"/></div></div>
+                <div class="form-group"><label class="form-label">Payment Mode</label><select class="form-select"><option>UPI</option><option>NEFT</option><option>RTGS</option><option>Cash</option></select></div>
+                <div class="form-group"><label class="form-label">UPI ID</label><input type="text" class="form-input" placeholder="agency@upi"/></div>
+                <button class="btn btn-accent btn-lg" onclick="showToast('Payment sent!','success')">💸 Send Payment</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="font-semi mb-3">Upcoming Due Dates</div>
+              <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                <div class="card-elevated"><div class="flex justify-between"><div><div class="font-semi text-sm">Suresh Agencies</div><div class="text-xs text-muted">15-day cycle</div></div><div class="text-right"><div class="font-bold text-success">₹0 due</div><div class="text-xs text-muted">Due 10 Apr</div></div></div></div>
+                <div class="card-elevated"><div class="flex justify-between"><div><div class="font-semi text-sm">Ramesh Kumar</div><div class="text-xs text-muted">Monthly</div></div><div class="text-right"><div class="font-bold text-warning">₹12,000</div><div class="text-xs text-muted">Due 30 Mar</div></div></div><button class="btn btn-primary btn-sm mt-2 w-full" onclick="showToast('Payment initiated!','success')">Pay Now</button></div>
+                <div class="card-elevated"><div class="flex justify-between"><div><div class="font-semi text-sm">Lotus Gardens</div><div class="text-xs text-muted">10-day cycle</div></div><div class="text-right"><div class="font-bold text-warning">₹5,800</div><div class="text-xs text-muted text-danger" style="color:var(--danger);">Overdue!</div></div></div><button class="btn btn-danger btn-sm mt-2 w-full" onclick="showToast('Payment initiated!','success')">Pay Overdue</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MARKET -->
+        <div id="sec-market" style="display:none;">
+          <div class="page-header"><div class="page-title">📊 Market Rates</div></div>
+          <div class="card"><div class="font-semi mb-4">Flower Price Trends</div><div style="height:280px;"><canvas id="storeMarketChart"></canvas></div></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <div class="bottom-nav-item active" onclick="switchSection('overview')"><span class="nav-icon">🏠</span>Home</div>
+      <div class="bottom-nav-item" onclick="switchSection('catalogue')"><span class="nav-icon">🌸</span>Order</div>
+      <div class="bottom-nav-item" onclick="switchSection('network')"><span class="nav-icon">🌐</span>People</div>
+      <div class="bottom-nav-item" onclick="switchSection('tracking')"><span class="nav-icon">🚚</span>Track</div>
+      <div class="bottom-nav-item" onclick="switchSection('ledger')"><span class="nav-icon">💰</span>Ledger</div>
+      <div class="bottom-nav-item" onclick="switchSection('payments')"><span class="nav-icon">💳</span>Pay</div>
+    </div>
+  </nav>
+
+  <!-- Profile Modal -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">👤 My Profile</div><button class="modal-close" onclick="closeModal('profileModal')">✕</button></div>
+      <div class="text-center mb-4">
+        <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto 0.75rem;background:linear-gradient(135deg,#8b5cf6,#7c3aed);">PF</div>
+        <div class="font-bold text-xl">Pooja Florals</div>
+        <div class="text-sm text-muted">🏪 Store Owner · Bangalore, KA</div>
+        <span class="badge badge-green mt-2">KYC Verified</span>
+      </div>
+      <div class="flex gap-3 mt-4" style="flex-wrap:wrap;"><button class="btn btn-primary w-full" onclick="closeModal('profileModal')">Edit</button><a href="index.html" class="btn btn-danger w-full">Sign Out</a></div>
+    </div>
+  </div>
+
+  <!-- Book Modal -->
+  <div class="modal-overlay" id="bookModal">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title" id="storeBookTitle">📦 Book Flowers</div><button class="modal-close" onclick="closeModal('bookModal')">✕</button></div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="form-group"><label class="form-label">Quantity</label><div class="input-group"><input type="number" class="form-input" placeholder="20"/><span class="input-suffix">kg</span></div></div>
+        <div class="form-group"><label class="form-label">Delivery Date</label><input type="date" class="form-input"/></div>
+        <div class="form-group"><label class="form-label">Billing Cycle</label><select class="form-select"><option>Daily</option><option>10 Days</option><option>15 Days</option><option>Monthly</option></select></div>
+        <button class="btn btn-accent btn-lg w-full" onclick="closeModal('bookModal');showToast('🎉 Order placed!','success')">Confirm Order</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <!-- Profile Detail Modal -->
+  <div class="modal-overlay" id="profileDetailModal" onclick="if(event.target===this) closeModal('profileDetailModal')">
+    <div class="modal" style="max-width:550px;">
+      <div class="modal-header"><div class="modal-title">👤 Profile Showcase</div><button class="modal-close" onclick="closeModal('profileDetailModal')">✕</button></div>
+      <div class="text-center mb-4">
+        <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,var(--blue),#0D47A1);" id="pdAvatar">P</div>
+        <div class="font-bold text-xl" id="pdName">Name</div>
+        <div class="text-sm text-muted"><span id="pdRole">Role</span> · <span id="pdLoc">Location</span></div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;" id="pdDetails">
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="btn btn-primary flex-1" onclick="closeModal('profileDetailModal');openModal('connectModal')">🤝 Request Connection</button>
+        <button class="btn btn-outline flex-1" onclick="closeModal('profileDetailModal')">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connect Modal -->
+  <div class="modal-overlay" id="connectModal">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">🤝 Send Connection Request</div><button class="modal-close" onclick="closeModal('connectModal')">✕</button></div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div id="connectTarget" class="font-semi text-center pb-2 border-b border-gray">Connecting...</div>
+        <div class="form-group"><label class="form-label">Purpose of Connection</label>
+          <select class="form-select" id="connPurpose">
+            <option value="buying">Buying / Sourcing Flowers</option>
+            <option value="selling">Selling / Supplying Flowers</option>
+            <option value="transport">Booking Transport</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Requested Settlement Cycle</label>
+          <select class="form-select" id="connBilling">
+            <option value="daily">Daily Settlement</option>
+            <option value="half_month">15-Day (Half-Month)</option>
+            <option value="monthly">Monthly Settlement</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Message (Optional)</label>
+          <textarea class="form-input" id="connMsg" rows="2" placeholder="Let's do business together..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-lg w-full" onclick="confirmConnection()">Send Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Modal -->
+  <div class="modal-overlay" id="chatModal">
+    <div class="modal" style="width:400px;padding:0;overflow:hidden;display:flex;flex-direction:column;height:80vh;max-height:600px;">
+      <div style="padding:1rem 1.5rem;background:var(--bg);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div class="font-semi" id="chatTitle">Direct Message</div>
+        <button class="modal-close" onclick="closeModal('chatModal')">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:1rem;background:#f9fafb;display:flex;flex-direction:column;gap:1rem;" id="chatMsgs">
+        <div class="text-center text-xs text-muted mb-2">Today</div>
+      </div>
+      <div style="padding:1rem;border-top:1px solid var(--border);background:#fff;display:flex;gap:.5rem;">
+        <input type="text" class="form-input" style="flex:1;" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()"/>
+        <button class="btn btn-primary" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/dashboard.js"></script>
+  <script src="assets/network.js"></script>
+  <script>
+    const sections=['overview','catalogue','orders','network','tracking','ledger','payments','market'];
+    function switchSection(n){sections.forEach(s=>{const e=document.getElementById('sec-'+s);if(e)e.style.display=s===n?'block':'none';});}
+
+    const catalogItems=[
+      {emoji:'🌸',name:'Rose',supplier:'Suresh Agencies',cycle:'15 Days',qty:'80kg',price:'₹128/kg',type:'agent'},
+      {emoji:'🌼',name:'Marigold',supplier:'Suresh Agencies',cycle:'15 Days',qty:'40kg',price:'₹48/kg',type:'agent'},
+      {emoji:'⚪',name:'Jasmine',supplier:'Ramesh Kumar',cycle:'Monthly',qty:'10kg',price:'₹275/kg',type:'farmer'},
+      {emoji:'🪷',name:'Lotus',supplier:'Lotus Gardens',cycle:'10 Days',qty:'500pcs',price:'₹92/doz',type:'farmer'},
+      {emoji:'🌺',name:'Gerbera',supplier:'Suresh Agencies',cycle:'15 Days',qty:'300stems',price:'₹18/stem',type:'agent'},
+      {emoji:'💐',name:'Chrysanthemum',supplier:'Tamil Flowers',cycle:'Monthly',qty:'20kg',price:'₹60/kg',type:'farmer'},
+    ];
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      const grid=document.getElementById('storeCatalogGrid');
+      catalogItems.forEach(item=>{
+        grid.innerHTML+=`<div class="card" style="border-radius:var(--radius-xl);overflow:hidden;padding:0;">
+          <div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:3rem;background:var(--bg-elevated);">${item.emoji}</div>
+          <div style="padding:1.25rem;">
+            <div class="flex justify-between items-start mb-2"><div class="font-semi">${item.name}</div><span class="badge ${item.type==='agent'?'badge-blue':'badge-green'}">${item.type}</span></div>
+            <div class="text-xs text-muted mb-1">👤 ${item.supplier}</div>
+            <div class="text-xs text-muted mb-3">💳 Billing: <strong>${item.cycle}</strong></div>
+            <div class="flex justify-between text-sm mb-3"><span class="text-muted">Avail.</span><span>${item.qty}</span></div>
+            <div class="font-bold text-accent mb-3">${item.price}</div>
+            <button class="btn btn-primary btn-sm w-full" onclick="document.getElementById('storeBookTitle').textContent='📦 Book ${item.name} — ${item.price}';openModal('bookModal')">📦 Book Now</button>
+          </div>
+        </div>`;
+      });
+
+      new Chart(document.getElementById('storeRevChart').getContext('2d'),{
+        type:'bar',data:{labels:last6Months(),datasets:[
+          {label:'Purchases',data:randArr(6,60000,95000),backgroundColor:'rgba(212,160,23,0.75)',borderRadius:6},
+          {label:'Sales',data:randArr(6,90000,135000),backgroundColor:'rgba(26,122,74,0.75)',borderRadius:6}
+        ]},
+        options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+      });
+      new Chart(document.getElementById('storeLedgerChart').getContext('2d'),{
+        type:'line',data:{labels:last6Months(),datasets:[
+          {label:'Purchases',data:randArr(6,60000,95000),borderColor:'#d4a017',fill:false,tension:0.4},
+          {label:'Sales',data:randArr(6,90000,135000),borderColor:'#1a7a4a',fill:false,tension:0.4}
+        ]},
+        options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+      });
+      new Chart(document.getElementById('storeMarketChart').getContext('2d'),{
+        type:'line',data:{labels:last12Months(),datasets:[
+          {label:'Rose',data:randArr(12,90,140),borderColor:'#ec4899',tension:0.4},
+          {label:'Marigold',data:randArr(12,30,60),borderColor:'#d4a017',tension:0.4},
+          {label:'Jasmine',data:randArr(12,200,320),borderColor:'#e0e0e0',tension:0.4},
+        ]},
+        options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+      });
+
+      const txData=[
+        {date:'26 Mar',item:'Rose 30kg',supplier:'Suresh Agencies',type:'Purchase',amt:'₹3,840',st:'Pending'},
+        {date:'25 Mar',item:'Marigold 10kg',supplier:'Suresh Agencies',type:'Purchase',amt:'₹480',st:'Paid'},
+        {date:'22 Mar',item:'Store Sales',supplier:'Walk-in',type:'Revenue',amt:'₹8,400',st:'Received'},
+        {date:'20 Mar',item:'Jasmine 3kg',supplier:'Ramesh Kumar',type:'Purchase',amt:'₹825',st:'Paid'},
+      ];
+      const tb=document.getElementById('storeTxTable');
+      txData.forEach(t=>{tb.innerHTML+=`<tr><td class="text-sm text-muted">${t.date}</td><td class="font-medium">${t.item}</td><td class="text-sm">${t.supplier}</td><td><span class="badge ${t.type==='Revenue'?'badge-green':'badge-amber'}">${t.type}</span></td><td class="font-bold ${t.type==='Revenue'?'text-green':'text-warning'}">${t.amt}</td><td><span class="badge ${t.st==='Paid'||t.st==='Received'?'badge-green':'badge-amber'}">${t.st}</span></td></tr>`;});
+      initTabs('.tabs');
+    });
+  </script>
+</body>
+</html>

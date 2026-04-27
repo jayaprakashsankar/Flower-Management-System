@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FloraChain — உங்கள் மலர் வியாபாரத்தை இனி சுலபமாக மாற்றுங்கள்!</title>
+  <meta name="description" content="India's trusted floral supply chain marketplace — connecting Farmers, Agents, Store Owners, Vehicle Owners and Drivers."/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="assets/logo.png"/>
+  <style>
+    /* ── Landing-only styles ── */
+    .hero {
+      position:relative; min-height:88vh;
+      display:flex; align-items:center; overflow:hidden;
+    }
+    .hero-bg {
+      position:absolute; inset:0;
+      background-image:url('assets/hero-bg.png');
+      background-size:cover; background-position:center;
+    }
+    .hero-overlay {
+      position:absolute; inset:0;
+      background:linear-gradient(100deg,rgba(10,40,15,.82) 45%,rgba(10,40,15,.3) 100%);
+    }
+    .hero-content { position:relative; z-index:2; padding:5rem 0 3rem; }
+    .hero-tag {
+      display:inline-flex; align-items:center; gap:.5rem;
+      background:rgba(76,175,80,.2); border:1px solid rgba(165,214,167,.4);
+      border-radius:var(--radius-full); padding:.35rem 1rem;
+      font-size:.78rem; font-weight:700; color:#A5D6A7;
+      letter-spacing:.06em; text-transform:uppercase; margin-bottom:1.25rem;
+    }
+    .hero-title {
+      font-size:clamp(2rem,5.5vw,4rem); font-weight:900;
+      color:#fff; line-height:1.1; margin-bottom:1rem;
+    }
+    .hero-title .hl { color:#A5D6A7; }
+    .hero-sub {
+      font-size:1rem; color:rgba(255,255,255,.8);
+      max-width:520px; margin-bottom:2rem; line-height:1.75;
+    }
+    .hero-ctas { display:flex; gap:1rem; flex-wrap:wrap; }
+    .hero-stats { display:flex; gap:2.5rem; margin-top:3rem; flex-wrap:wrap; }
+    .hero-stat-val { font-size:1.75rem; font-weight:900; color:#A5D6A7; }
+    .hero-stat-lbl { font-size:.75rem; color:rgba(255,255,255,.6); margin-top:.15rem; }
+
+    /* ── Section Common ── */
+    section { padding:5rem 0; }
+    .section-eyebrow {
+      display:inline-flex; align-items:center; gap:.4rem;
+      background:var(--green-xlight); border:1px solid var(--green-light);
+      border-radius:var(--radius-full); padding:.3rem .9rem;
+      font-size:.72rem; font-weight:700; color:var(--green-dark);
+      letter-spacing:.06em; text-transform:uppercase; margin-bottom:.75rem;
+    }
+    .section-title  { font-size:clamp(1.6rem,3.5vw,2.5rem); font-weight:800; margin-bottom:.75rem; }
+    .section-sub    { color:var(--text-3); font-size:.95rem; max-width:520px; }
+
+    /* ── Role Landing Cards ── */
+    .role-landing-card {
+      background:#fff; border:2px solid var(--border);
+      border-radius:var(--radius-xl); padding:2rem 1.5rem;
+      text-align:center; cursor:pointer; transition:all var(--t-normal);
+      box-shadow:var(--shadow-xs);
+      text-decoration:none; display:block; color:var(--text);
+    }
+    .role-landing-card:hover {
+      border-color:var(--green); transform:translateY(-6px);
+      box-shadow:var(--shadow-green);
+    }
+    .role-landing-card .rl-icon {
+      width:72px; height:72px; border-radius:var(--radius-xl);
+      display:flex; align-items:center; justify-content:center;
+      font-size:2rem; margin:0 auto 1rem;
+    }
+    .role-landing-card .rl-name { font-weight:800; font-size:1.05rem; margin-bottom:.4rem; }
+    .role-landing-card .rl-desc { font-size:.8rem; color:var(--text-3); line-height:1.55; }
+    .role-landing-card .rl-cta  {
+      margin-top:1.25rem; font-size:.8rem; font-weight:700;
+      color:var(--green-dark); display:flex; align-items:center; justify-content:center; gap:.3rem;
+    }
+
+    /* ── About Strip ── */
+    .about-strip { background:var(--green-dark); color:#fff; padding:4rem 0; }
+    .about-strip .section-title { color:#fff; }
+    .about-strip .section-sub   { color:rgba(255,255,255,.75); }
+    .about-pill {
+      background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+      border-radius:var(--radius-xl); padding:1.5rem;
+    }
+    .about-pill .ap-icon { font-size:1.75rem; margin-bottom:.6rem; }
+    .about-pill .ap-title { font-weight:700; font-size:.95rem; margin-bottom:.35rem; }
+    .about-pill .ap-desc  { font-size:.8rem; color:rgba(255,255,255,.7); line-height:1.6; }
+
+    /* ── Trending ── */
+    .trending-section { background:#fff; }
+
+    /* ── CTA Banner ── */
+    .cta-banner {
+      background:linear-gradient(135deg,var(--green-dark),var(--green));
+      border-radius:var(--radius-xl); padding:4rem;
+      text-align:center; color:#fff;
+      box-shadow:var(--shadow-green);
+    }
+    .cta-banner h2 { font-size:clamp(1.5rem,3vw,2.25rem); font-weight:900; margin-bottom:.75rem; }
+    .cta-banner p  { font-size:1rem; opacity:.85; margin-bottom:2rem; max-width:480px; margin-left:auto; margin-right:auto; }
+
+    /* ── Footer ── */
+    footer { background:#212121; color:#fff; padding:3.5rem 0 1.5rem; }
+    .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:3rem; margin-bottom:2.5rem; }
+    .footer-logo  { color:var(--green-light); font-size:1.15rem; font-weight:900; display:flex; align-items:center; gap:.5rem; margin-bottom:.75rem; }
+    .footer-desc  { font-size:.84rem; color:rgba(255,255,255,.55); line-height:1.7; }
+    .footer-col-title { font-size:.78rem; text-transform:uppercase; letter-spacing:.07em; color:rgba(255,255,255,.4); font-weight:700; margin-bottom:.85rem; }
+    .footer-link  { display:block; font-size:.84rem; color:rgba(255,255,255,.6); margin-bottom:.5rem; transition:color var(--t-fast); }
+    .footer-link:hover { color:var(--green-light); }
+    .footer-contact { font-size:.84rem; color:rgba(255,255,255,.6); margin-bottom:.4rem; }
+    .footer-bottom { border-top:1px solid rgba(255,255,255,.1); padding-top:1.5rem; display:flex; align-items:center; justify-content:space-between; font-size:.78rem; color:rgba(255,255,255,.35); flex-wrap:wrap; gap:.5rem; }
+
+    /* ── Privacy / T&C ── */
+    .page-panel { max-width:800px; margin:0 auto; padding:3rem 1.5rem; }
+    .page-panel h1 { margin-bottom:1.5rem; }
+    .page-panel h2 { font-size:1.15rem; margin:2rem 0 .5rem; color:var(--green-dark); }
+    .page-panel p  { font-size:.9rem; color:var(--text-2); line-height:1.8; margin-bottom:.75rem; }
+
+    @media (max-width:900px) { .footer-grid { grid-template-columns:1fr 1fr; gap:2rem; } }
+    @media (max-width:600px) {
+      .footer-grid { grid-template-columns:1fr; gap:1.5rem; }
+      .cta-banner { padding:2.5rem 1.5rem; }
+      .hero-ctas { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="logo-mark">
+      <img src="assets/logo.png" alt="FloraChain"/>
+      <span class="logo-text">Flora<span>Chain</span></span>
+    </a>
+
+    <div class="global-search hide-mobile" style="margin:0 auto;">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search flowers, agents, locations…" id="globalSearch"/>
+    </div>
+
+    <nav class="nav-links hide-mobile">
+      <a href="#about"    class="nav-link">About</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#market"   class="nav-link">Market</a>
+      <a href="privacy.html" class="nav-link">Privacy</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a href="auth.html?mode=login"    class="btn btn-outline btn-sm hide-mobile">Login</a>
+      <a href="auth.html?mode=register" class="btn btn-primary btn-sm">Sign Up</a>
+      <div class="hamburger" id="mobileMenu"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile nav drawer -->
+<div id="mobileDrawer" style="display:none;position:fixed;top:64px;left:0;right:0;background:#fff;z-index:150;border-bottom:1px solid var(--border);padding:1rem;box-shadow:var(--shadow-md);">
+  <div style="display:flex;flex-direction:column;gap:.5rem;">
+    <a href="#about"    class="nav-link">About</a>
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#market"   class="nav-link">Market</a>
+    <a href="privacy.html" class="nav-link">Privacy</a>
+    <hr style="border-top:1px solid var(--border);margin:.25rem 0;"/>
+    <a href="auth.html?mode=login"    class="btn btn-outline btn-sm" style="justify-content:flex-start;">Login</a>
+    <a href="auth.html?mode=register" class="btn btn-primary btn-sm" style="justify-content:flex-start;">Sign Up</a>
+  </div>
+</div>
+
+<!-- ═══ LIVE TICKER ═══ -->
+<div class="ticker-bar">
+  <div class="ticker-inner" id="tickerInner">
+    <span class="ticker-item"><span class="ticker-label">🌸 ROSE</span> ₹120/kg <span class="up">▲8.5%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🌼 MARIGOLD</span> ₹45/kg <span class="down">▼2.1%</span></span>
+    <span class="ticker-item"><span class="ticker-label">⚪ JASMINE</span> ₹280/kg <span class="up">▲14.2%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🪷 LOTUS</span> ₹95/dozen <span class="up">▲3.7%</span></span>
+    <span class="ticker-item"><span class="ticker-label">💐 CHRYSANTHEMUM</span> ₹60/kg <span class="down">▼5.9%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🌺 GERBERA</span> ₹18/stem <span class="up">▲1.2%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🌻 SUNFLOWER</span> ₹55/kg <span class="up">▲6.8%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🌷 TUBEROSE</span> ₹160/kg <span class="down">▼3.4%</span></span>
+    <!-- duplicate for seamless loop -->
+    <span class="ticker-item"><span class="ticker-label">🌸 ROSE</span> ₹120/kg <span class="up">▲8.5%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🌼 MARIGOLD</span> ₹45/kg <span class="down">▼2.1%</span></span>
+    <span class="ticker-item"><span class="ticker-label">⚪ JASMINE</span> ₹280/kg <span class="up">▲14.2%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🪷 LOTUS</span> ₹95/dozen <span class="up">▲3.7%</span></span>
+    <span class="ticker-item"><span class="ticker-label">💐 CHRYSANTHEMUM</span> ₹60/kg <span class="down">▼5.9%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🌺 GERBERA</span> ₹18/stem <span class="up">▲1.2%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🌻 SUNFLOWER</span> ₹55/kg <span class="up">▲6.8%</span></span>
+    <span class="ticker-item"><span class="ticker-label">🌷 TUBEROSE</span> ₹160/kg <span class="down">▼3.4%</span></span>
+  </div>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="container hero-content">
+    <div class="hero-tag">✦ India's #1 Floral Supply Chain Platform</div>
+    <h1 class="hero-title animate-up">
+      உங்கள் மலர் வியாபாரத்தை<br/>
+      <span class="hl">இனி சுலபமாக மாற்றுங்கள்!</span>
+    </h1>
+    <p class="hero-sub animate-up animate-delay-1">
+      விவசாயிகள், ஏஜென்ட்கள், ஸ்டோர் ஓனர்கள் மற்றும் வாகன ஓட்டிகளை ஒரே தளத்தில் இணைக்கும் இந்தியாவின் நம்பகமான மலர் சந்தை. தினசரி விலை நிலவரம் முதல் நேரடி விற்பனை வரை அனைத்தும் ஒரே இடத்தில்!
+    </p>
+    <div class="hero-ctas animate-up animate-delay-2">
+      <a href="auth.html?mode=register" class="btn btn-cta btn-xl">🌸 இன்றே தொடங்குங்கள்</a>
+      <a href="#roles" class="btn btn-xl" style="background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.4);">Explore Platform →</a>
+    </div>
+    <div class="hero-stats animate-up animate-delay-3">
+      <div><div class="hero-stat-val">12,000+</div><div class="hero-stat-lbl">Active Farmers</div></div>
+      <div><div class="hero-stat-val">₹4.8Cr</div><div class="hero-stat-lbl">Daily Trade Volume</div></div>
+      <div><div class="hero-stat-val">380+</div><div class="hero-stat-lbl">Cities</div></div>
+      <div><div class="hero-stat-val">99.2%</div><div class="hero-stat-lbl">On-Time Delivery</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ROLE SELECTION CARDS ═══ -->
+<section id="roles" style="padding:5rem 0;background:#fff;">
+  <div class="container">
+    <div class="text-center mb-8">
+      <div class="section-eyebrow">நீங்கள் யார்? · Who Are You?</div>
+      <h2 class="section-title">உங்கள் பாத்திரத்தைத் தேர்ந்தெடுங்கள்</h2>
+      <p class="section-sub" style="margin:0 auto;">Click your role to jump straight into your personalized onboarding journey.</p>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;max-width:900px;margin:0 auto;">
+      <a href="auth.html?role=farmer" class="role-landing-card animate-fade animate-delay-1">
+        <div class="rl-icon" style="background:#E8F5E9;">🌾</div>
+        <div class="rl-name">நான் ஒரு விவசாயி</div>
+        <div class="rl-desc">Grow & sell flowers directly to agents and stores at best market prices.</div>
+        <div class="rl-cta">Get Started →</div>
+      </a>
+      <a href="auth.html?role=agent" class="role-landing-card animate-fade animate-delay-2">
+        <div class="rl-icon" style="background:#E3F2FD;">🤝</div>
+        <div class="rl-name">நான் ஒரு ஏஜென்ட்</div>
+        <div class="rl-desc">Source from multiple farmers, set competitive prices, build your network.</div>
+        <div class="rl-cta">Get Started →</div>
+      </a>
+      <a href="auth.html?role=storeowner" class="role-landing-card animate-fade animate-delay-2">
+        <div class="rl-icon" style="background:#F3E5F5;">🏪</div>
+        <div class="rl-name">நான் ஒரு ஸ்டோர் ஓனர்</div>
+        <div class="rl-desc">Buy fresh flowers daily from agents or farms with transparent pricing.</div>
+        <div class="rl-cta">Get Started →</div>
+      </a>
+      <a href="auth.html?role=vehicleowner" class="role-landing-card animate-fade animate-delay-3">
+        <div class="rl-icon" style="background:#FFF8E1;">🚛</div>
+        <div class="rl-name">நான் ஒரு வெகிக்கிள் ஓனர்</div>
+        <div class="rl-desc">List your fleet, toggle availability, set rental rates and earn from deliveries.</div>
+        <div class="rl-cta">Get Started →</div>
+      </a>
+      <a href="auth.html?role=driver" class="role-landing-card animate-fade animate-delay-4">
+        <div class="rl-icon" style="background:#FBE9E7;">🚚</div>
+        <div class="rl-name">நான் ஒரு டிரைவர்</div>
+        <div class="rl-desc">Accept delivery assignments, track earnings and manage your license profile.</div>
+        <div class="rl-cta">Get Started →</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TRENDING SECTION ═══ -->
+<section id="trending" class="trending-section" style="padding:5rem 0;background:var(--bg);">
+  <div class="container">
+    <div class="flex justify-between items-center mb-6" style="flex-wrap:wrap;gap:1rem;">
+      <div>
+        <div class="section-eyebrow">இன்றைய சந்தை · Today's Market</div>
+        <h2 class="section-title" style="margin-bottom:0;">Trending Flowers Today</h2>
+      </div>
+      <span class="live-badge"><span class="live-dot"></span> Live · Updated just now</span>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;" id="trendingGrid"></div>
+  </div>
+</section>
+
+<!-- ═══ ABOUT / FEATURES ═══ -->
+<section class="about-strip" id="about">
+  <div class="container">
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+      <div>
+        <div class="section-eyebrow" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.8);">எங்களைப் பற்றி · About Us</div>
+        <h2 class="section-title">எங்கள் நோக்கம்</h2>
+        <p class="section-sub" style="color:rgba(255,255,255,.7);max-width:100%;">
+          பூக்கள் உற்பத்தியில் ஈடுபடும் விவசாயிகளுக்கும், அதை மக்களிடம் கொண்டு சேர்க்கும் ஏஜென்ட்கள், கடைகாரர்கள் மற்றும் வாகன ஓட்டிகளுக்கும் இடையே உள்ள இடைவெளியைக் குறைப்பதே எங்கள் முக்கிய நோக்கம்.
+        </p>
+        <a href="auth.html?mode=register" class="btn btn-cta btn-lg mt-6">Join FloraChain Today</a>
+      </div>
+      <div class="grid grid-2 gap-4">
+        <div class="about-pill"><div class="ap-icon">🤝</div><div class="ap-title">நேரடித் தொடர்பு</div><div class="ap-desc">Direct Connection between farmers and buyers — no unnecessary middlemen.</div></div>
+        <div class="about-pill"><div class="ap-icon">📊</div><div class="ap-title">வெளிப்படையான கணக்குகள்</div><div class="ap-desc">Transparent ledger — see your income, expenses and profit anytime.</div></div>
+        <div class="about-pill"><div class="ap-icon">📈</div><div class="ap-title">தினசரி விலை நிலவரம்</div><div class="ap-desc">Dynamic & fixed pricing options with real-time market intelligence.</div></div>
+        <div class="about-pill"><div class="ap-icon">🚚</div><div class="ap-title">லைவ் டெலிவரி ட்ராக்கிங்</div><div class="ap-desc">Track every shipment live on map with driver details.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section id="features" style="padding:5rem 0;background:#fff;">
+  <div class="container">
+    <div class="text-center mb-8">
+      <div class="section-eyebrow">Platform Features</div>
+      <h2 class="section-title">Everything In One Place</h2>
+      <p class="section-sub" style="margin:0 auto;">Enterprise-grade tools built for India's floral economy.</p>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.25rem;">
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#E8F5E9;">💰</div>
+        <div class="feature-title">Financial Ledger</div>
+        <div class="feature-desc">Full income, expense and net profit tracking with detailed transaction history for every user role.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#E3F2FD;">📊</div>
+        <div class="feature-title">Market Intelligence</div>
+        <div class="feature-desc">Real-time flower prices, historical trends, regional demand and price alerts delivered instantly.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#FBE9E7;">🔴</div>
+        <div class="feature-title">Live Order Tracking</div>
+        <div class="feature-desc">GPS-linked delivery tracking with step-by-step status updates from dispatch to doorstep.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#FFF8E1;">💳</div>
+        <div class="feature-title">Integrated Payments</div>
+        <div class="feature-desc">UPI, bank transfers and configurable billing cycles — Daily, 10-day, 15-day or Monthly.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#F3E5F5;">🛡️</div>
+        <div class="feature-title">KYC Verification</div>
+        <div class="feature-desc">Aadhaar-based identity verification with secure document upload for trust and compliance.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap" style="background:#E8F5E9;">📱</div>
+        <div class="feature-title">Mobile-First Design</div>
+        <div class="feature-desc">Bottom nav on mobile, full sidebar on desktop. Works perfectly on any screen size.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LIVE MARKET TABLE ═══ -->
+<section id="market" style="padding:5rem 0;background:var(--bg);">
+  <div class="container">
+    <div class="flex justify-between items-center mb-6" style="flex-wrap:wrap;gap:1rem;">
+      <div>
+        <div class="section-eyebrow">Live Market · 26 Mar 2026</div>
+        <h2 class="section-title" style="margin-bottom:0;">Today's Flower Rate Board</h2>
+      </div>
+      <a href="auth.html?mode=login" class="btn btn-primary">View Full Dashboard →</a>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div id="marketTable"></div>
+      <div style="padding:1rem 1.5rem;text-align:center;border-top:1px solid var(--border);background:#FAFAFA;">
+        <a href="auth.html?mode=register" class="btn btn-cta">🌸 Sign Up to See All Rates & Set Alerts</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA BANNER ═══ -->
+<section style="padding:3rem 0;background:var(--bg);">
+  <div class="container">
+    <div class="cta-banner">
+      <h2>Start Selling Smarter. Earn More. Waste Less.</h2>
+      <p>Join thousands of farmers, agents, stores and drivers already transforming India's floral economy.</p>
+      <div class="flex gap-4 justify-center" style="flex-wrap:wrap;">
+        <a href="auth.html?mode=register" class="btn btn-cta btn-xl">🌸 Create Free Account</a>
+        <a href="dashboard-farmer.html"    class="btn btn-xl" style="background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.4);">View Demo Dashboard</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo"><img src="assets/logo.png" alt="" style="width:28px;height:28px;border-radius:6px;"/>FloraChain</div>
+        <div class="footer-desc">India's most comprehensive B2B/B2C floral supply chain marketplace. Connecting every link from farm to vase.</div>
+        <div class="mt-4" style="display:flex;gap:.75rem;">
+          <a href="#" class="footer-link" style="margin-bottom:0;">📘 Facebook</a>
+          <a href="#" class="footer-link" style="margin-bottom:0;">📸 Instagram</a>
+          <a href="#" class="footer-link" style="margin-bottom:0;">🐦 Twitter</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Platform</div>
+        <a href="auth.html?role=farmer"      class="footer-link">For Farmers</a>
+        <a href="auth.html?role=agent"        class="footer-link">For Agents</a>
+        <a href="auth.html?role=storeowner"   class="footer-link">For Store Owners</a>
+        <a href="auth.html?role=vehicleowner" class="footer-link">For Vehicle Owners</a>
+        <a href="auth.html?role=driver"       class="footer-link">For Drivers</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Legal</div>
+        <a href="privacy.html" class="footer-link">Privacy Policy</a>
+        <a href="terms.html"   class="footer-link">Terms &amp; Conditions</a>
+        <a href="#"            class="footer-link">Cookie Policy</a>
+        <a href="#"            class="footer-link">Refund Policy</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact Us</div>
+        <div class="footer-contact">📧 support@florachain.in</div>
+        <div class="footer-contact">📞 +91 98765 43210</div>
+        <div class="footer-contact">🕐 Mon–Sat, 6am–8pm</div>
+        <div class="footer-contact mt-2">📍 Bangalore, Karnataka</div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 FloraChain. All rights reserved. Made with 🌸 for India's floral economy.</div>
+      <div>CIN: U74999KA2026PTC000001 · GST: 29AAAAA0000A1Z5</div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+<script>
+  // Mobile hamburger
+  const menuToggle=document.getElementById('mobileMenu');
+  const drawer=document.getElementById('mobileDrawer');
+  menuToggle.addEventListener('click',()=>{
+    menuToggle.classList.toggle('open');
+    drawer.style.display=drawer.style.display==='none'?'block':'none';
+  });
+  // Close drawer on link click
+  drawer.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
+    menuToggle.classList.remove('open'); drawer.style.display='none';
+  }));
+
+  // Trending data
+  const trending=[
+    {emoji:'🌸',name:'Rose',price:'₹120/kg',change:'+8.5%',up:true},
+    {emoji:'⚪',name:'Jasmine',price:'₹280/kg',change:'+14.2%',up:true},
+    {emoji:'🌼',name:'Marigold',price:'₹45/kg',change:'-2.1%',up:false},
+    {emoji:'🌺',name:'Gerbera',price:'₹18/stem',change:'+1.2%',up:true},
+    {emoji:'🪷',name:'Lotus',price:'₹95/doz',change:'+3.7%',up:true},
+    {emoji:'💐',name:'Chrysanthemum',price:'₹60/kg',change:'-5.9%',up:false},
+    {emoji:'🌻',name:'Sunflower',price:'₹55/kg',change:'+6.8%',up:true},
+    {emoji:'🌷',name:'Tuberose',price:'₹160/kg',change:'-3.4%',up:false},
+  ];
+  const tg=document.getElementById('trendingGrid');
+  trending.forEach(f=>{
+    tg.innerHTML+=`<div class="trend-card">
+      <div class="trend-img">${f.emoji}</div>
+      <div class="trend-body">
+        <div class="trend-name">${f.name}</div>
+        <div class="trend-price">${f.price}</div>
+        <div class="trend-change ${f.up?'':'text-danger'}" style="color:${f.up?'var(--success)':'var(--danger)'};">${f.change} today</div>
+      </div>
+    </div>`;
+  });
+
+  // Market table
+  const markets=[
+    {emoji:'🌸',name:'Rose',variety:'Red & Pink',price:'₹120/kg',change:'▲ 8.5%',up:true},
+    {emoji:'🌼',name:'Marigold',variety:'Orange & Yellow',price:'₹45/kg',change:'▼ 2.1%',up:false},
+    {emoji:'⚪',name:'Jasmine',variety:'Sambac',price:'₹280/kg',change:'▲ 14.2%',up:true},
+    {emoji:'🪷',name:'Lotus',variety:'Pink Lotus',price:'₹95/dozen',change:'▲ 3.7%',up:true},
+    {emoji:'💐',name:'Chrysanthemum',variety:'White & Yellow',price:'₹60/kg',change:'▼ 5.9%',up:false},
+    {emoji:'🌺',name:'Gerbera',variety:'Assorted',price:'₹18/stem',change:'▲ 1.2%',up:true},
+  ];
+  const mt=document.getElementById('marketTable');
+  markets.forEach(m=>{
+    mt.innerHTML+=`<div class="market-row">
+      <div class="market-flower"><span class="market-emoji">${m.emoji}</span><div><div class="market-name">${m.name}</div><div class="market-variety">${m.variety}</div></div></div>
+      <div style="text-align:right;">
+        <div class="market-price">${m.price}</div>
+        <div class="market-change ${m.up?'up':'down'}">${m.change}</div>
+      </div>
+    </div>`;
+  });
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click',e=>{
+      const t=document.querySelector(a.getAttribute('href'));
+      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Driver Dashboard — FloraChain</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="assets/logo.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .trip-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.5rem;transition:all var(--transition-normal);}
+    .trip-card:hover{border-color:var(--border-accent);}
+    .route-display{display:flex;align-items:center;gap:.5rem;font-weight:600;font-size:.9rem;margin:.75rem 0;}
+    .route-dot{width:10px;height:10px;border-radius:50%;background:var(--primary);}
+    .route-line{flex:1;height:2px;background:var(--border);}
+    .avail-hero{background:linear-gradient(135deg,rgba(26,122,74,.15),rgba(212,160,23,.05));border:1px solid var(--border-accent);border-radius:var(--radius-xl);padding:2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem;margin-bottom:1.5rem;}
+    .star-rating{display:flex;gap:.15rem;font-size:1.1rem;}
+    /* ── Weather widget ── */
+    .weather-widget{background:linear-gradient(135deg,#1e3a5f,#2d6a9f);border-radius:var(--radius-xl);padding:1.5rem;color:#fff;position:relative;overflow:hidden;}
+    .weather-widget::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06);}
+    .weather-temp{font-size:3rem;font-weight:800;line-height:1;}
+    .weather-desc{font-size:.9rem;opacity:.85;margin-top:.25rem;}
+    .weather-row{display:flex;gap:1.5rem;margin-top:1rem;font-size:.8rem;opacity:.85;}
+    /* ── Timer ── */
+    .timer-display{font-size:3.5rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--primary);letter-spacing:.05em;}
+    .timer-controls{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem;}
+    .timer-controls .btn{min-width:90px;}
+    /* ── Job info card ── */
+    .job-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+    @media(max-width:640px){.job-info-grid{grid-template-columns:1fr;}}
+    /* ── Profile photo ring ── */
+    .photo-ring{width:90px;height:90px;border-radius:50%;border:3px solid var(--primary);padding:3px;margin:0 auto .75rem;}
+    .photo-ring img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+    /* ── History call btn ── */
+    .btn-call{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:var(--radius-full);padding:.35rem .9rem;font-size:.78rem;font-weight:700;cursor:pointer;transition:opacity .2s;}
+    .btn-call:hover{opacity:.85;}
+    .history-row td{vertical-align:middle;}
+    /* ── Attachment badge ── */
+    .attach-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-full);padding:.2rem .7rem;font-size:.75rem;font-weight:700;color:var(--warning);}
+    /* ── Toggle: state stored in dataset to fix two-way toggle ── */
+    .toggle-btn-avail{border:none;background:none;cursor:pointer;padding:0;}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="flex items-center gap-4">
+      <div class="hamburger" id="sidebarToggle"><span></span><span></span><span></span></div>
+      <a href="index.html" class="logo-mark"><img src="assets/logo.png" alt="FloraChain"/><span class="logo-text hide-mobile">FloraChain</span></a>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <button class="btn-icon notif-dot" onclick="document.getElementById('notifPanel').classList.toggle('open')">🔔</button>
+        <div class="notif-panel" id="notifPanel">
+          <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;">Notifications</div>
+          <div class="notif-item"><div class="notif-icon">📬</div><div><div class="notif-text">New job: Marigold field work</div><div class="notif-time">Just now</div></div></div>
+          <div class="notif-item"><div class="notif-icon">💳</div><div><div class="notif-text">Payment credited: ₹1,800</div><div class="notif-time">2 hrs ago</div></div></div>
+          <div class="notif-item"><div class="notif-icon">⚠️</div><div><div class="notif-text">EMI due in 3 days — Tractor KA-09</div><div class="notif-time">Today</div></div></div>
+        </div>
+      </div>
+      <div class="avatar" style="background:linear-gradient(135deg,#ef4444,#b91c1c);" onclick="openModal('profileModal')">AS</div>
+    </div>
+  </div>
+</header>
+
+<div id="sidebarOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;backdrop-filter:blur(4px);"></div>
+
+<div class="layout-wrapper">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a class="sidebar-item active" onclick="switchSection('overview')"><span class="s-icon">🏠</span> Overview</a>
+      <a class="sidebar-item" onclick="switchSection('assignments')"><span class="s-icon">📬</span> Assignments <span class="sidebar-badge" id="assignBadge">2</span></a>
+      <a class="sidebar-item" onclick="switchSection('active')"><span class="s-icon">⏱️</span> Live Trip</a>
+      <a class="sidebar-item" onclick="switchSection('history')"><span class="s-icon">📋</span> Trip History</a>
+      <a class="sidebar-item" onclick="switchSection('network')"><span class="s-icon">🌐</span> People (Network)</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Finance</div>
+      <a class="sidebar-item" onclick="switchSection('earnings')"><span class="s-icon">💰</span> Earnings</a>
+      <a class="sidebar-item" onclick="switchSection('payments')"><span class="s-icon">💳</span> Bank Details</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Account</div>
+      <a class="sidebar-item" onclick="switchSection('profile')"><span class="s-icon">👤</span> My Profile</a>
+      <a class="sidebar-item" href="index.html"><span class="s-icon">🔒</span> Sign Out</a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="page-content">
+
+      <!-- ═══ OVERVIEW ═══ -->
+      <div id="sec-overview">
+        <div class="page-header">
+          <div class="page-title">Driver Portal 🧑‍✈️</div>
+          <div class="page-subtitle">Arjun Sharma · Tractor Operator</div>
+        </div>
+
+        <!-- ── Availability Toggle (BUG FIXED) ── -->
+        <div class="avail-hero">
+          <div>
+            <div class="font-bold text-2xl mb-1">You are <span id="availText" style="color:var(--success);">On Duty</span></div>
+            <div class="text-sm text-muted">Toggle your duty status to receive new assignments</div>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <!--
+              BUG FIX: Previously the toggle used classList.toggle() but the
+              onclick handler's 'this' context was lost. Now we use a dedicated
+              toggleAvail() that reads + writes a data-state attribute, making
+              both directions (on→off and off→on) reliable.
+            -->
+            <div class="toggle-switch active" id="mainAvailToggle" style="width:64px;height:34px;" onclick="toggleAvail()"></div>
+            <span class="text-xs text-muted" id="toggleHint">Tap to go Off Duty</span>
+          </div>
+        </div>
+
+        <!-- Weather Widget -->
+        <div class="weather-widget mb-4" id="weatherWidget">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="font-size:.8rem;opacity:.7;margin-bottom:.25rem;">📍 Job Site: Mysuru Field</div>
+              <div class="weather-temp" id="wTemp">28°C</div>
+              <div class="weather-desc" id="wDesc">☀️ Clear Sky · Feels like 31°C</div>
+              <div class="weather-row">
+                <span id="wHumidity">💧 Humidity: 62%</span>
+                <span id="wWind">💨 Wind: 14 km/h</span>
+                <span id="wVis">👁 Visibility: Good</span>
+              </div>
+            </div>
+            <div style="text-align:right;font-size:.78rem;opacity:.7;">
+              <div id="wTime">Updated just now</div>
+              <button onclick="fetchWeather()" style="margin-top:.5rem;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;padding:.25rem .6rem;cursor:pointer;font-size:.75rem;">↻ Refresh</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-4 gap-4 mb-6">
+          <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value text-green">₹24,800</div><div class="stat-change up">▲ 8% vs Feb</div></div>
+          <div class="stat-card accent"><div class="stat-label">Jobs Done</div><div class="stat-value text-accent">14</div><div class="stat-change up">This month</div></div>
+          <div class="stat-card"><div class="stat-label">Rating</div><div class="stat-value">4.8 ⭐</div><div class="stat-change up">342 reviews</div></div>
+          <div class="stat-card info"><div class="stat-label">Pending Pay</div><div class="stat-value text-warning">₹3,600</div></div>
+        </div>
+
+        <!-- Current + Next Job -->
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+          <div class="trip-card">
+            <div class="flex justify-between items-center mb-2">
+              <div class="font-semi">Active Job</div>
+              <span class="badge badge-amber">In Progress</span>
+            </div>
+            <div class="route-display"><div class="route-dot"></div><div class="font-semi">Mysuru Field A</div><div class="route-line"></div><div class="font-semi">Plot #24</div><div class="route-dot" style="background:var(--accent);"></div></div>
+            <div style="display:flex;flex-direction:column;gap:.5rem;" class="text-sm">
+              <div class="flex justify-between"><span class="text-muted">Work Order</span><span>#WO-4821</span></div>
+              <div class="flex justify-between"><span class="text-muted">Attachment</span><span class="attach-badge">🔧 Rotavator</span></div>
+              <div class="flex justify-between"><span class="text-muted">Rate</span><span class="font-bold text-accent">₹350/hr</span></div>
+              <div class="flex justify-between"><span class="text-muted">Distance</span><span class="font-semi text-success">2.4 km away</span></div>
+            </div>
+            <button class="btn btn-primary btn-sm w-full mt-3" onclick="switchSection('active')">▶ Open Live Timer →</button>
+          </div>
+          <div class="trip-card">
+            <div class="flex justify-between items-center mb-2">
+              <div class="font-semi">Next Assignment</div>
+              <span class="badge badge-blue">Scheduled</span>
+            </div>
+            <div class="route-display"><div class="route-dot"></div><div class="font-semi">Tumkur Farm</div><div class="route-line"></div><div class="font-semi">Plot #8</div><div class="route-dot" style="background:var(--accent);"></div></div>
+            <div style="display:flex;flex-direction:column;gap:.5rem;" class="text-sm">
+              <div class="flex justify-between"><span class="text-muted">Order</span><span>#WO-4823</span></div>
+              <div class="flex justify-between"><span class="text-muted">Attachment</span><span class="attach-badge">🌾 Paddy Roller</span></div>
+              <div class="flex justify-between"><span class="text-muted">Date</span><span>29 Mar · 7:30 AM</span></div>
+              <div class="flex justify-between"><span class="text-muted">Rate</span><span class="text-accent font-bold">₹80/count</span></div>
+            </div>
+            <div class="flex gap-2 mt-3">
+              <button class="btn btn-primary flex-1" onclick="acceptJob(this,'WO-4823')">Accept</button>
+              <!-- BUG FIX: Decline now calls declineJob() which properly updates state -->
+              <button class="btn btn-ghost" onclick="declineJob(this,'WO-4823')">Decline</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Earnings chart + Ratings -->
+        <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;">
+          <div class="card"><div class="font-semi mb-4">Monthly Earnings</div><div style="height:200px;"><canvas id="driverEarningsChart"></canvas></div></div>
+          <div class="card">
+            <div class="font-semi mb-3">My Ratings</div>
+            <div class="text-center mb-3"><div class="stat-value mb-1">4.8</div><div class="star-rating" style="justify-content:center;">⭐⭐⭐⭐⭐</div><div class="text-xs text-muted mt-1">Based on 342 jobs</div></div>
+            <div style="display:flex;flex-direction:column;gap:.5rem;">
+              <div class="flex gap-2 items-center text-sm"><span class="text-muted" style="width:20px;">5</span><div class="progress-bar flex-1" style="height:4px;"><div class="progress-fill" style="width:72%;"></div></div><span class="text-xs">72%</span></div>
+              <div class="flex gap-2 items-center text-sm"><span class="text-muted" style="width:20px;">4</span><div class="progress-bar flex-1" style="height:4px;"><div class="progress-fill" style="width:20%;background:var(--primary-light);"></div></div><span class="text-xs">20%</span></div>
+              <div class="flex gap-2 items-center text-sm"><span class="text-muted" style="width:20px;">3</span><div class="progress-bar flex-1" style="height:4px;"><div class="progress-fill" style="width:6%;background:var(--warning);"></div></div><span class="text-xs">6%</span></div>
+              <div class="flex gap-2 items-center text-sm"><span class="text-muted" style="width:20px;">2</span><div class="progress-bar flex-1" style="height:4px;"><div class="progress-fill" style="width:2%;background:var(--danger);"></div></div><span class="text-xs">2%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ASSIGNMENTS ═══ -->
+      <div id="sec-assignments" style="display:none;">
+        <div class="page-header"><div class="page-title">📬 Job Assignments</div><div class="page-subtitle">Accept or decline scheduled work orders</div></div>
+        <div id="assignmentsList" style="display:flex;flex-direction:column;gap:.75rem;"></div>
+      </div>
+
+      <!-- ═══ LIVE TRIP TIMER ═══ -->
+      <div id="sec-active" style="display:none;">
+        <div class="page-header"><div class="page-title">⏱️ Live Trip Timer</div><div class="page-subtitle">Track your active working hours</div></div>
+
+        <div class="job-info-grid">
+          <div class="card">
+            <div class="font-semi mb-3">📍 Job Location</div>
+            <div class="text-sm" style="display:flex;flex-direction:column;gap:.5rem;">
+              <div class="flex justify-between"><span class="text-muted">Client</span><span class="font-semi">Ramu Farms</span></div>
+              <div class="flex justify-between"><span class="text-muted">Location</span><span>Mysuru Field A, Plot 24</span></div>
+              <div class="flex justify-between"><span class="text-muted">Attachment</span><span class="attach-badge">🔧 Rotavator</span></div>
+              <div class="flex justify-between"><span class="text-muted">Pricing</span><span class="font-bold text-accent">₹350/hour</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="font-semi mb-3">📡 Location & Distance</div>
+            <div class="text-sm" style="display:flex;flex-direction:column;gap:.5rem;">
+              <div class="flex justify-between"><span class="text-muted">Your Location</span><span id="myLoc">Detecting…</span></div>
+              <div class="flex justify-between"><span class="text-muted">Job Site</span><span>Mysuru Field A</span></div>
+              <div class="flex justify-between"><span class="text-muted">Distance</span><span class="text-success font-bold" id="distLabel">2.4 km</span></div>
+              <div class="flex justify-between"><span class="text-muted">ETA</span><span class="font-semi">~8 min by tractor</span></div>
+            </div>
+            <button onclick="detectLocation()" class="btn btn-ghost btn-sm w-full mt-3">📡 Update Location</button>
+          </div>
+        </div>
+
+        <!-- Timer card -->
+        <div class="card text-center mb-4" style="padding:2.5rem 2rem;">
+          <div class="text-muted text-sm mb-2" id="timerStatus">Ready to Start</div>
+          <div class="timer-display" id="timerDisplay">00:00:00</div>
+          <div class="text-xs text-muted mt-2" id="breakLabel" style="display:none;">Break time not counted</div>
+          <div class="timer-controls justify-content-center" style="justify-content:center;">
+            <button class="btn btn-primary" id="btnStart" onclick="startTimer()">▶ Start</button>
+            <button class="btn btn-ghost" id="btnPause" onclick="pauseTimer()" style="display:none;">⏸ Pause</button>
+            <button class="btn btn-primary" id="btnResume" onclick="resumeTimer()" style="display:none;">▶ Resume</button>
+            <button class="btn btn-danger" id="btnEnd" onclick="endTripModal()" style="display:none;">⏹ End Trip</button>
+          </div>
+        </div>
+
+        <!-- Cost preview -->
+        <div class="card mb-4" id="costPreview" style="display:none;">
+          <div class="font-semi mb-3">💰 Live Cost Estimate</div>
+          <div class="grid grid-4 gap-3">
+            <div class="stat-card"><div class="stat-label">Active Hours</div><div class="stat-value text-green" id="activeHrs">0.0</div></div>
+            <div class="stat-card accent"><div class="stat-label">Break Time</div><div class="stat-value text-muted" id="breakHrs">0 min</div></div>
+            <div class="stat-card"><div class="stat-label">Rate</div><div class="stat-value text-accent">₹350/hr</div></div>
+            <div class="stat-card info"><div class="stat-label">Est. Total</div><div class="stat-value text-warning" id="estTotal">₹0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ NETWORK ═══ -->
+      <div id="sec-network" style="display:none;">
+        <div class="page-header"><div class="page-title">🌐 Universal Discovery</div><div class="page-subtitle">Search, follow, and connect with everyone across FloraChain</div></div>
+        <div class="card mb-4">
+          <div class="flex gap-3 mb-2" style="flex-wrap:wrap;">
+            <div class="input-group" style="flex:1;min-width:200px;"><span class="input-icon">🔍</span><input class="form-input" id="netSearch" placeholder="Search by name, role, or location..." oninput="renderPeople()"/></div>
+            <select class="form-select" style="width:auto;" id="netRole" onchange="renderPeople()">
+              <option value="all">All Roles</option>
+              <option value="farmer">👨‍🌾 Farmers</option>
+              <option value="agent">🤝 Agents</option>
+              <option value="store">🏪 Store Owners</option>
+              <option value="vehicle">🚛 Vehicles/Drivers</option>
+              <option value="customer">👥 Customers</option>
+            </select>
+          </div>
+        </div>
+        <div class="tabs mb-4">
+          <button class="tab-btn active" data-tab="net-all" onclick="renderPeople('all')">Discover People</button>
+          <button class="tab-btn" data-tab="net-conn" onclick="renderPeople('conn')">My Connections</button>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;" id="peopleGrid"></div>
+      </div>
+
+      <!-- ═══ TRIP HISTORY ═══ -->
+      <div id="sec-history" style="display:none;">
+        <div class="page-header"><div class="page-title">📋 Trip History</div><div class="page-subtitle">Complete log of past work, payments & client details</div></div>
+        <div class="card">
+          <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap;gap:.75rem;">
+            <div class="font-semi">All Jobs</div>
+            <div class="flex gap-2">
+              <select class="form-select" id="histFilter" onchange="renderHistory()" style="max-width:160px;">
+                <option value="all">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending Payment</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Order</th><th>Client</th><th>Work Type</th><th>Duration/Count</th><th>Attachment</th><th>Amount</th><th>Payment</th><th>Action</th></tr></thead>
+              <tbody id="histTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ EARNINGS ═══ -->
+      <div id="sec-earnings" style="display:none;">
+        <div class="page-header"><div class="page-title">💰 My Earnings</div></div>
+        <div class="grid grid-4 gap-4 mb-6">
+          <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-value text-green">₹1,86,400</div></div>
+          <div class="stat-card accent"><div class="stat-label">This Month</div><div class="stat-value text-accent">₹24,800</div></div>
+          <div class="stat-card"><div class="stat-label">Jobs (Month)</div><div class="stat-value">14</div></div>
+          <div class="stat-card info"><div class="stat-label">Pending</div><div class="stat-value text-warning">₹3,600</div></div>
+        </div>
+        <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+          <div class="card"><div style="height:260px;"><canvas id="driverEarningsFull"></canvas></div></div>
+          <div class="card">
+            <div class="font-semi mb-4">Pending Payments</div>
+            <div style="display:flex;flex-direction:column;gap:.75rem;">
+              <div class="card-elevated"><div class="flex justify-between"><div><div class="font-semi text-sm">Job #WO-4821</div><div class="text-xs text-muted">Ramu Farms · Rotavator 3.2 hrs</div></div><div class="text-right"><div class="font-bold text-warning">₹1,120</div><div class="text-xs text-muted">Due today</div></div></div></div>
+              <div class="card-elevated"><div class="flex justify-between"><div><div class="font-semi text-sm">Job #WO-4817</div><div class="text-xs text-muted">Suresh Kumar · Paddy 25 counts</div></div><div class="text-right"><div class="font-bold text-warning">₹2,000</div><div class="text-xs text-muted">Due 27 Mar</div></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PROFILE ═══ -->
+      <div id="sec-profile" style="display:none;">
+        <div class="page-header"><div class="page-title">👤 My Profile</div></div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div class="card">
+            <div class="text-center mb-4">
+              <div class="photo-ring"><div class="avatar" style="width:84px;height:84px;font-size:1.75rem;margin:0;background:linear-gradient(135deg,#ef4444,#b91c1c);">AS</div></div>
+              <div class="font-bold text-xl">Arjun Sharma</div>
+              <div class="text-sm text-muted">🧑‍✈️ Driver · Bangalore, KA</div>
+              <span class="badge badge-green mt-2">KYC Verified</span>
+            </div>
+            <div class="divider"></div>
+            <div style="display:flex;flex-direction:column;gap:.85rem;" class="text-sm">
+              <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" value="Arjun Sharma"/></div>
+              <div class="form-group"><label class="form-label">Mobile / WhatsApp</label><input type="text" class="form-input" value="+91 98765 43210"/></div>
+              <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" value="arjun@example.com"/></div>
+              <div class="form-group"><label class="form-label">UPI ID</label><input type="text" class="form-input" value="arjun.sharma@upi"/></div>
+              <button class="btn btn-primary w-full" onclick="showToast('Profile updated!','success')">Save Profile</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="font-semi mb-4">License & Settings</div>
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              <div class="card-elevated">
+                <div class="flex justify-between items-center"><div><div class="font-semi text-sm">Driving License</div><div class="text-xs text-muted">KA-09-20XX-XXXXXX</div></div><span class="badge badge-green">Valid</span></div>
+                <div class="text-xs text-muted mt-1">Expires: Dec 2028</div>
+              </div>
+              <div class="form-group"><label class="form-label">DL Number</label><input type="text" class="form-input" value="KA-09-20XX-XXXXXX"/></div>
+              <div class="form-group"><label class="form-label">License Expiry</label><input type="date" class="form-input" value="2028-12-31"/></div>
+              <div class="divider"></div>
+              <div class="font-semi text-sm mb-2">Preferences</div>
+              <div class="flex justify-between items-center">
+                <div><div class="font-semi text-sm">Live Location Tracking</div><div class="text-xs text-muted">Share location while on duty</div></div>
+                <div class="toggle-wrap"><div class="toggle-switch active" id="trackToggle" data-on="Enabled" data-off="Disabled"></div><span class="toggle-label text-xs" style="color:var(--success);">Enabled</span></div>
+              </div>
+              <div class="flex justify-between items-center mt-2">
+                <div><div class="font-semi text-sm">Job Notifications</div><div class="text-xs text-muted">New assignment alerts</div></div>
+                <div class="toggle-wrap"><div class="toggle-switch active" id="notifToggle" data-on="On" data-off="Off"></div><span class="toggle-label text-xs" style="color:var(--success);">On</span></div>
+              </div>
+              <div class="divider"></div>
+              <button class="btn btn-ghost w-full" onclick="showToast('Password reset link sent!','info')">🔑 Reset Password</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ BANK DETAILS ═══ -->
+      <div id="sec-payments" style="display:none;">
+        <div class="page-header"><div class="page-title">💳 Payment Details</div></div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div class="card">
+            <div class="font-semi mb-4">Your UPI & Bank</div>
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              <div class="form-group"><label class="form-label">UPI ID</label><input type="text" class="form-input" value="arjun.sharma@upi"/></div>
+              <div class="form-group"><label class="form-label">Account Number</label><input type="text" class="form-input" value="XXXX XXXX XXXX 9012"/></div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">IFSC</label><input type="text" class="form-input" value="SBIN0001234"/></div>
+                <div class="form-group"><label class="form-label">Bank</label><input type="text" class="form-input" value="State Bank"/></div>
+              </div>
+              <button class="btn btn-primary" onclick="showToast('Payment details saved!','success')">Save Details</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="font-semi mb-3">Recent Transactions</div>
+            <div style="display:flex;flex-direction:column;gap:.75rem;">
+              <div class="card-elevated"><div class="flex justify-between"><div><div class="font-semi text-sm">Job #WO-4815</div><div class="text-xs text-muted">Rotavator 4 hrs</div></div><div class="text-right"><div class="font-bold text-success">₹1,400</div><div class="badge badge-green" style="font-size:.65rem;">Paid</div></div></div></div>
+              <div class="card-elevated"><div class="flex justify-between"><div><div class="font-semi text-sm">Job #WO-4810</div><div class="text-xs text-muted">Paddy 18 counts</div></div><div class="text-right"><div class="font-bold text-success">₹1,440</div><div class="badge badge-green" style="font-size:.65rem;">Paid</div></div></div></div>
+              <div class="card-elevated"><div class="flex justify-between"><div><div class="font-semi text-sm">Fuel Expense</div><div class="text-xs text-muted">25 Mar</div></div><div class="text-right"><div class="font-bold text-danger">-₹820</div><div class="badge badge-amber" style="font-size:.65rem;">Expense</div></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <div class="bottom-nav-item active" onclick="switchSection('overview')"><span class="nav-icon">🏠</span>Home</div>
+    <div class="bottom-nav-item" onclick="switchSection('assignments')"><span class="nav-icon">📬</span>Jobs</div>
+    <div class="bottom-nav-item" onclick="switchSection('active')"><span class="nav-icon">⏱️</span>Timer</div>
+    <div class="bottom-nav-item" onclick="switchSection('network')"><span class="nav-icon">🌐</span>People</div>
+    <div class="bottom-nav-item" onclick="switchSection('earnings')"><span class="nav-icon">💰</span>Earn</div>
+    <div class="bottom-nav-item" onclick="switchSection('profile')"><span class="nav-icon">👤</span>Profile</div>
+  </div>
+</nav>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">👤 Profile</div><button class="modal-close" onclick="closeModal('profileModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,#ef4444,#b91c1c);">AS</div>
+      <div class="font-bold text-xl">Arjun Sharma</div>
+      <div class="text-sm text-muted">🧑‍✈️ Driver · Tractor Operator</div>
+      <span class="badge badge-green mt-2">KYC Verified</span>
+    </div>
+    <div class="flex gap-3 mt-4" style="flex-wrap:wrap;"><button class="btn btn-primary w-full" onclick="closeModal('profileModal');switchSection('profile')">View Profile</button><a href="index.html" class="btn btn-danger w-full">Sign Out</a></div>
+  </div>
+</div>
+
+<!-- End Trip Modal -->
+<div class="modal-overlay" id="endTripModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">⏹ End Trip</div><button class="modal-close" onclick="closeModal('endTripModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div id="endTripSummary" class="card-elevated text-sm"></div>
+      <div class="form-group">
+        <label class="form-label">Unit Count (if count-based work)</label>
+        <input type="number" class="form-input" id="unitCountInput" placeholder="e.g. 24 rolling counts" min="0"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Final Notes</label>
+        <textarea class="form-input" rows="2" placeholder="Any notes for the client..."></textarea>
+      </div>
+      <button class="btn btn-danger btn-lg w-full" onclick="confirmEndTrip()">Confirm End & Calculate Cost</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Profile Detail Modal -->
+<div class="modal-overlay" id="profileDetailModal" onclick="if(event.target===this) closeModal('profileDetailModal')">
+  <div class="modal" style="max-width:550px;">
+    <div class="modal-header"><div class="modal-title">👤 Profile Showcase</div><button class="modal-close" onclick="closeModal('profileDetailModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,var(--blue),#0D47A1);" id="pdAvatar">P</div>
+      <div class="font-bold text-xl" id="pdName">Name</div>
+      <div class="text-sm text-muted"><span id="pdRole">Role</span> · <span id="pdLoc">Location</span></div>
+    </div>
+    <div style="background:#f9fafb;border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;" id="pdDetails">
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-primary flex-1" onclick="closeModal('profileDetailModal');openModal('connectModal')">🤝 Request Connection</button>
+      <button class="btn btn-outline flex-1" onclick="closeModal('profileDetailModal')">Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- Connect Modal -->
+<div class="modal-overlay" id="connectModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🤝 Send Connection Request</div><button class="modal-close" onclick="closeModal('connectModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div id="connectTarget" class="font-semi text-center pb-2 border-b border-gray">Connecting...</div>
+      <div class="form-group"><label class="form-label">Purpose of Connection</label>
+        <select class="form-select" id="connPurpose">
+          <option value="buying">Buying / Sourcing Flowers</option>
+          <option value="selling">Selling / Supplying Flowers</option>
+          <option value="transport">Booking Transport</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Requested Settlement Cycle</label>
+        <select class="form-select" id="connBilling">
+          <option value="daily">Daily Settlement</option>
+          <option value="half_month">15-Day (Half-Month)</option>
+          <option value="monthly">Monthly Settlement</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Message (Optional)</label>
+        <textarea class="form-input" id="connMsg" rows="2" placeholder="Let's do business together..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-lg w-full" onclick="confirmConnection()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Modal -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal" style="width:400px;padding:0;overflow:hidden;display:flex;flex-direction:column;height:80vh;max-height:600px;">
+    <div style="padding:1rem 1.5rem;background:var(--bg);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div class="font-semi" id="chatTitle">Direct Message</div>
+      <button class="modal-close" onclick="closeModal('chatModal')">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:1rem;background:#f9fafb;display:flex;flex-direction:column;gap:1rem;" id="chatMsgs">
+      <div class="text-center text-xs text-muted mb-2">Today</div>
+    </div>
+    <div style="padding:1rem;border-top:1px solid var(--border);background:#fff;display:flex;gap:.5rem;">
+      <input type="text" class="form-input" style="flex:1;" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()"/>
+      <button class="btn btn-primary" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/dashboard.js"></script>
+<script src="assets/network.js"></script>
+<script>
+  // ─── Section switcher ───────────────────────────────────────────────────────
+  window.sections = ['overview','assignments','active','network','history','earnings','profile','payments'];
+
+  // ─── AVAILABILITY TOGGLE — BUG FIX ─────────────────────────────────────────
+  // Root cause: original code used `classList.toggle('active')` on a parameter
+  // `sw` but the onclick="toggleAvail(this)" lost context in some browsers.
+  // Fix: use a standalone function reading the toggle's current classList state.
+  let dutyState = true; // true = On Duty
+  function toggleAvail() {
+    const sw  = document.getElementById('mainAvailToggle');
+    const txt = document.getElementById('availText');
+    const hint= document.getElementById('toggleHint');
+    dutyState = !dutyState;                            // ← reliably flips
+    if (dutyState) {
+      sw.classList.add('active');
+      txt.textContent  = 'On Duty';
+      txt.style.color  = 'var(--success)';
+      hint.textContent = 'Tap to go Off Duty';
+      showToast('✅ You are now On Duty — ready for jobs!','success');
+    } else {
+      sw.classList.remove('active');
+      txt.textContent  = 'Off Duty';
+      txt.style.color  = 'var(--danger)';
+      hint.textContent = 'Tap to go On Duty';
+      showToast('⏸ You are now Off Duty','warning');
+    }
+  }
+
+  // ─── DECLINE BUG FIX ───────────────────────────────────────────────────────
+  // Previously the decline button had no working onclick handler in the
+  // assignments section. Now declineJob() properly updates card state.
+  function acceptJob(btn, woId) {
+    const card = btn.closest('.trip-card') || btn.closest('.card');
+    if (!card) return;
+    card.querySelectorAll('.flex.gap-2.mt-3 button, .flex.gap-2.mt-4 button').forEach(b=>b.remove());
+    card.querySelector('.badge')||null;
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent='Accepted'; badge.className='badge badge-green'; }
+    card.insertAdjacentHTML('beforeend','<div class="badge badge-green mt-3 w-full text-center" style="display:block;padding:.5rem;">✅ Job Accepted</div>');
+    showToast('✅ Job accepted! #'+woId,'success');
+    // Decrement badge
+    const b = document.getElementById('assignBadge');
+    if (b && parseInt(b.textContent)>0) b.textContent = parseInt(b.textContent)-1;
+  }
+
+  function declineJob(btn, woId) {
+    const card = btn.closest('.trip-card') || btn.closest('.card');
+    if (!card) return;
+    card.style.opacity = '.45';
+    card.querySelectorAll('button').forEach(b=>b.disabled=true);
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent='Declined'; badge.className='badge badge-amber'; }
+    showToast('Job #'+woId+' declined','warning');
+    const b = document.getElementById('assignBadge');
+    if (b && parseInt(b.textContent)>0) b.textContent = parseInt(b.textContent)-1;
+  }
+
+  // ─── Assignments list ────────────────────────────────────────────────────────
+  const assignmentsData = [
+    {id:'WO-4823',client:'Ramu Farms',from:'Mysuru Field A',to:'Plot #24',attach:'Rotavator',pricing:'₹350/hr',date:'29 Mar · 7:30 AM',dist:'2.4 km'},
+    {id:'WO-4825',client:'Suresh Kumar',from:'Tumkur Farm',to:'Plot #8',attach:'Paddy Roller',pricing:'₹80/count',date:'30 Mar · 5:00 AM',dist:'4.1 km'},
+  ];
+
+  function renderAssignments() {
+    const list = document.getElementById('assignmentsList');
+    if (!list) return;
+    list.innerHTML = '';
+    assignmentsData.forEach(a => {
+      list.innerHTML += `
+        <div class="trip-card">
+          <div class="flex justify-between items-start" style="flex-wrap:wrap;gap:.75rem;">
+            <div>
+              <div class="font-semi">#${a.id} · ${a.client}</div>
+              <div class="route-display" style="margin:.4rem 0;"><span>📍 ${a.from}</span><span style="color:var(--text-muted);"> → </span><span>📍 ${a.to}</span></div>
+              <div class="flex gap-2" style="flex-wrap:wrap;margin-top:.3rem;">
+                <span class="attach-badge">🔧 ${a.attach}</span>
+                <span class="text-xs text-muted">${a.date}</span>
+                <span class="text-xs text-success font-semi">${a.dist} away</span>
+              </div>
+            </div>
+            <div class="flex gap-2 items-center">
+              <span class="font-bold text-accent">${a.pricing}</span>
+              <button class="btn btn-primary btn-sm" onclick="acceptJob(this,'${a.id}')">Accept</button>
+              <button class="btn btn-ghost btn-sm" onclick="declineJob(this,'${a.id}')">Decline</button>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // ─── WEATHER (OpenWeatherMap-compatible) ────────────────────────────────────
+  const WEATHER_API_KEY = 'YOUR_OWM_KEY'; // replace with real key
+  async function fetchWeather(lat=12.2958, lon=76.6394) {
+    try {
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('API not configured');
+      const d = await res.json();
+      document.getElementById('wTemp').textContent    = Math.round(d.main.temp)+'°C';
+      document.getElementById('wDesc').textContent    = d.weather[0].main+' · Feels like '+Math.round(d.main.feels_like)+'°C';
+      document.getElementById('wHumidity').textContent= '💧 Humidity: '+d.main.humidity+'%';
+      document.getElementById('wWind').textContent    = '💨 Wind: '+Math.round(d.wind.speed*3.6)+' km/h';
+      document.getElementById('wTime').textContent    = 'Updated '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    } catch(e) {
+      // Show demo data if API key not set
+      document.getElementById('wTime').textContent = '(Demo data — add API key)';
+    }
+  }
+
+  function detectLocation() {
+    if (!navigator.geolocation) { showToast('Geolocation not supported','error'); return; }
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude.toFixed(4);
+      const lng = pos.coords.longitude.toFixed(4);
+      document.getElementById('myLoc').textContent = lat+', '+lng;
+      showToast('📡 Location updated!','success');
+      fetchWeather(pos.coords.latitude, pos.coords.longitude);
+    }, () => {
+      document.getElementById('myLoc').textContent = 'Permission denied';
+      showToast('Location permission denied','warning');
+    });
+  }
+
+  // ─── LIVE TRIP TIMER ────────────────────────────────────────────────────────
+  let timerInterval = null, timerSeconds = 0, breakSeconds = 0;
+  let timerRunning = false, tripStarted = false, onBreak = false;
+
+  function startTimer() {
+    if (timerRunning) return;
+    tripStarted = true; timerRunning = true; onBreak = false;
+    document.getElementById('btnStart').style.display='none';
+    document.getElementById('btnPause').style.display='';
+    document.getElementById('btnEnd').style.display='';
+    document.getElementById('costPreview').style.display='';
+    document.getElementById('timerStatus').textContent = '🔴 Working…';
+    timerInterval = setInterval(tickTimer, 1000);
+    showToast('▶ Trip started!','success');
+  }
+
+  function pauseTimer() {
+    if (!timerRunning || onBreak) return;
+    clearInterval(timerInterval);
+    onBreak = true; timerRunning = false;
+    timerInterval = setInterval(()=>{ breakSeconds++; updateBreakLabel(); }, 1000);
+    document.getElementById('btnPause').style.display='none';
+    document.getElementById('btnResume').style.display='';
+    document.getElementById('timerStatus').textContent = '⏸ On Break…';
+    document.getElementById('breakLabel').style.display='';
+    showToast('⏸ Break started — not billing','info');
+  }
+
+  function resumeTimer() {
+    clearInterval(timerInterval);
+    onBreak = false; timerRunning = true;
+    document.getElementById('btnResume').style.display='none';
+    document.getElementById('btnPause').style.display='';
+    document.getElementById('timerStatus').textContent = '🔴 Working…';
+    timerInterval = setInterval(tickTimer, 1000);
+    showToast('▶ Resumed!','success');
+  }
+
+  function tickTimer() {
+    timerSeconds++;
+    const h=Math.floor(timerSeconds/3600), m=Math.floor((timerSeconds%3600)/60), s=timerSeconds%60;
+    document.getElementById('timerDisplay').textContent =
+      String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    updateCostPreview();
+  }
+
+  function updateBreakLabel() {
+    const bm=Math.floor(breakSeconds/60), bs=breakSeconds%60;
+    document.getElementById('breakLabel').textContent =
+      `Break: ${String(bm).padStart(2,'0')}:${String(bs).padStart(2,'0')} (not billed)`;
+  }
+
+  function updateCostPreview() {
+    const activeS = timerSeconds - breakSeconds;
+    const hrs = (activeS/3600).toFixed(2);
+    const rate = 350; // ₹/hr
+    document.getElementById('activeHrs').textContent  = hrs+' hrs';
+    document.getElementById('breakHrs').textContent   = Math.floor(breakSeconds/60)+' min';
+    document.getElementById('estTotal').textContent   = '₹'+Math.round(rate*parseFloat(hrs));
+  }
+
+  function endTripModal() {
+    if (!tripStarted) return;
+    clearInterval(timerInterval);
+    const activeS = timerSeconds - breakSeconds;
+    const hrs = (activeS/3600).toFixed(2);
+    document.getElementById('endTripSummary').innerHTML =
+      `<div style="display:flex;flex-direction:column;gap:.4rem;">
+        <div class="flex justify-between"><span class="text-muted">Total Time</span><span>${Math.floor(timerSeconds/3600)}h ${Math.floor((timerSeconds%3600)/60)}m</span></div>
+        <div class="flex justify-between"><span class="text-muted">Break Time</span><span>${Math.floor(breakSeconds/60)} min</span></div>
+        <div class="flex justify-between font-semi"><span>Billable Hours</span><span class="text-green">${hrs} hrs</span></div>
+        <div class="flex justify-between font-semi"><span>Estimated Cost</span><span class="text-accent">₹${Math.round(350*parseFloat(hrs))}</span></div>
+      </div>`;
+    openModal('endTripModal');
+  }
+
+  function confirmEndTrip() {
+    const units = parseInt(document.getElementById('unitCountInput').value)||0;
+    closeModal('endTripModal');
+    document.getElementById('btnEnd').style.display='none';
+    document.getElementById('btnPause').style.display='none';
+    document.getElementById('btnResume').style.display='none';
+    document.getElementById('timerStatus').textContent = '✅ Trip Completed';
+    showToast('✅ Trip ended! Cost calculated.','success');
+    timerRunning=false; onBreak=false;
+  }
+
+  // ─── History ────────────────────────────────────────────────────────────────
+  const histData = [
+    {date:'25 Mar',id:'#WO-4819',client:'Ramu Farms',phone:'9876500001',work:'Rotavator',duration:'3.2 hrs',attach:'Rotavator',amount:'₹1,120',payment:'paid'},
+    {date:'24 Mar',id:'#WO-4816',client:'Suresh Kumar',phone:'9876500002',work:'Paddy Rolling',duration:'25 counts',attach:'Paddy Roller',amount:'₹2,000',payment:'pending'},
+    {date:'22 Mar',id:'#WO-4813',client:'Ravi Farms',phone:'9876500003',work:'Rotavator',duration:'4.5 hrs',attach:'Rotavator',amount:'₹1,575',payment:'paid'},
+    {date:'20 Mar',id:'#WO-4810',client:'Mohan Gowda',phone:'9876500004',work:'Paddy Rolling',duration:'18 counts',attach:'Paddy Roller',amount:'₹1,440',payment:'paid'},
+    {date:'18 Mar',id:'#WO-4807',client:'Kavita Farms',phone:'9876500005',work:'Rotavator',duration:'2.8 hrs',attach:'Rotavator',amount:'₹980',payment:'pending'},
+  ];
+
+  function renderHistory() {
+    const filter = document.getElementById('histFilter')?.value || 'all';
+    const t = document.getElementById('histTable');
+    if (!t) return;
+    t.innerHTML = '';
+    histData.filter(r => filter==='all' || r.payment===filter).forEach(r => {
+      const isPending = r.payment === 'pending';
+      t.innerHTML += `<tr class="history-row">
+        <td class="text-sm text-muted">${r.date}</td>
+        <td>${r.id}</td>
+        <td><div class="font-semi text-sm">${r.client}</div></td>
+        <td class="text-sm">${r.work}</td>
+        <td class="text-sm">${r.duration}</td>
+        <td><span class="attach-badge">🔧 ${r.attach}</span></td>
+        <td class="font-bold text-green">${r.amount}</td>
+        <td><span class="badge ${isPending?'badge-amber':'badge-green'}">${isPending?'Pending':'Paid'}</span></td>
+        <td>${isPending
+          ? `<button class="btn-call" onclick="callClient('${r.phone}','${r.client}')">📞 Call</button>`
+          : '<span class="text-xs text-muted">—</span>'}</td>
+      </tr>`;
+    });
+  }
+
+  function callClient(phone, name) {
+    showToast('📞 Calling '+name+' ('+phone+')…','info');
+    window.location.href = 'tel:'+phone;
+  }
+
+  // ─── Init ───────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    renderAssignments();
+    renderHistory();
+    fetchWeather();
+
+    new Chart(document.getElementById('driverEarningsChart').getContext('2d'),{
+      type:'line',
+      data:{labels:last6Months(),datasets:[{label:'Earnings',data:randArr(6,12000,30000),borderColor:'#1a7a4a',backgroundColor:'rgba(26,122,74,.1)',fill:true,tension:.4,borderWidth:2.5}]},
+      options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+    });
+    new Chart(document.getElementById('driverEarningsFull').getContext('2d'),{
+      type:'bar',
+      data:{labels:last6Months(),datasets:[{label:'Earnings',data:randArr(6,12000,30000),backgroundColor:'rgba(26,122,74,.75)',borderRadius:6}]},
+      options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+    });
+    initToggles();
+  });
+</script>
+</body>
+</html>

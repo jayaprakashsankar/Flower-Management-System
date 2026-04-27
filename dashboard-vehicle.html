@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vehicle Owner Dashboard — FloraChain</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="assets/logo.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .vehicle-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      transition: all var(--transition-normal);
+    }
+    .vehicle-card:hover { border-color: var(--border-accent); }
+    .vehicle-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .vehicle-type-badge { display: inline-block; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--radius-full); padding: 0.2rem 0.75rem; font-size: 0.72rem; font-weight: 700; color: var(--warning); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="flex items-center gap-4">
+        <div class="hamburger" id="sidebarToggle"><span></span><span></span><span></span></div>
+        <a href="index.html" class="logo-mark"><img src="assets/logo.png" alt="FloraChain"/><span class="logo-text hide-mobile">FloraChain</span></a>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <button class="btn-icon notif-dot" onclick="document.getElementById('notifPanel').classList.toggle('open')">🔔</button>
+          <div class="notif-panel" id="notifPanel">
+            <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;">Notifications</div>
+            <div class="notif-item"><div class="notif-icon">📬</div><div><div class="notif-text">New booking request from Suresh Agencies</div><div class="notif-time">Just now</div></div></div>
+            <div class="notif-item"><div class="notif-icon">💳</div><div><div class="notif-text">Payment received: ₹1,200</div><div class="notif-time">1 hr ago</div></div></div>
+          </div>
+        </div>
+        <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706);" onclick="openModal('profileModal')">VR</div>
+      </div>
+    </div>
+  </header>
+
+  <div id="sidebarOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:150;backdrop-filter:blur(4px);"></div>
+
+  <div class="layout-wrapper">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <a class="sidebar-item active" onclick="switchSection('overview')"><span class="s-icon">🏠</span> Overview</a>
+        <a class="sidebar-item" onclick="switchSection('vehicles')"><span class="s-icon">🚚</span> My Vehicles</a>
+        <a class="sidebar-item" onclick="switchSection('bookings')"><span class="s-icon">📬</span> Booking Requests <span class="sidebar-badge">4</span></a>
+        <a class="sidebar-item" onclick="switchSection('active')"><span class="s-icon">🔴</span> Active Trips</a>
+        <a class="sidebar-item" onclick="switchSection('network')"><span class="s-icon">🌐</span> People (Network)</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Finance</div>
+        <a class="sidebar-item" onclick="switchSection('ledger')"><span class="s-icon">💰</span> Ledger</a>
+        <a class="sidebar-item" onclick="switchSection('payments')"><span class="s-icon">💳</span> Payments</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Account</div>
+        <a class="sidebar-item" onclick="openModal('profileModal')"><span class="s-icon">⚙️</span> Settings / Profile</a>
+        <a class="sidebar-item" href="index.html"><span class="s-icon">🔒</span> Sign Out</a>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="page-content">
+
+        <!-- OVERVIEW -->
+        <div id="sec-overview">
+          <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+            <div><div class="page-title">Fleet Dashboard 🚚</div><div class="page-subtitle">Vinod Rajan Transport · Bangalore, KA</div></div>
+            <button class="btn btn-primary" onclick="openModal('addVehicleModal')">+ Add Vehicle</button>
+          </div>
+
+          <div class="grid grid-4 gap-4 mb-6">
+            <div class="stat-card"><div class="stat-label">Monthly Revenue</div><div class="stat-value text-green">₹68,400</div><div class="stat-change up">▲ 15% vs Feb</div></div>
+            <div class="stat-card accent"><div class="stat-label">Trips Completed</div><div class="stat-value text-accent">42</div><div class="stat-change up">This month</div></div>
+            <div class="stat-card"><div class="stat-label">Active Vehicles</div><div class="stat-value">3 / 5</div><div class="stat-change up">3 available</div></div>
+            <div class="stat-card info"><div class="stat-label">Pending Bookings</div><div class="stat-value text-warning">4</div></div>
+          </div>
+
+          <!-- Fleet Status -->
+          <div class="card mb-4">
+            <div class="flex justify-between items-center mb-4"><div class="font-semi">Fleet Status Overview</div><button class="btn btn-ghost btn-sm" onclick="switchSection('vehicles')">Manage →</button></div>
+            <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem;" id="fleetOverview"></div>
+          </div>
+
+          <!-- Earnings Chart + Bookings -->
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+            <div class="card">
+              <div class="font-semi mb-4">Monthly Earnings</div>
+              <div style="height:220px;"><canvas id="earningsChart"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="font-semi mb-3">Recent Booking Requests</div>
+              <div style="display:flex;flex-direction:column;gap:0.75rem;" id="recentBookings"></div>
+              <button class="btn btn-ghost btn-sm w-full mt-3" onclick="switchSection('bookings')">View All Bookings →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ NETWORK ═══ -->
+        <div id="sec-network" style="display:none;">
+          <div class="page-header"><div class="page-title">🌐 Universal Discovery</div><div class="page-subtitle">Search, follow, and connect with everyone across FloraChain</div></div>
+          <div class="card mb-4">
+            <div class="flex gap-3 mb-2" style="flex-wrap:wrap;">
+              <div class="input-group" style="flex:1;min-width:200px;"><span class="input-icon">🔍</span><input class="form-input" id="netSearch" placeholder="Search by name, role, or location..." oninput="renderPeople()"/></div>
+              <select class="form-select" style="width:auto;" id="netRole" onchange="renderPeople()">
+                <option value="all">All Roles</option>
+                <option value="farmer">👨‍🌾 Farmers</option>
+                <option value="agent">🤝 Agents</option>
+                <option value="store">🏪 Store Owners</option>
+                <option value="vehicle">🚛 Vehicles/Drivers</option>
+                <option value="customer">👥 Customers</option>
+              </select>
+            </div>
+          </div>
+          <div class="tabs mb-4">
+            <button class="tab-btn active" data-tab="net-all" onclick="renderPeople('all')">Discover People</button>
+            <button class="tab-btn" data-tab="net-conn" onclick="renderPeople('conn')">My Connections</button>
+          </div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;" id="peopleGrid"></div>
+        </div>
+
+        <!-- VEHICLES -->
+        <div id="sec-vehicles" style="display:none;">
+          <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+            <div><div class="page-title">🚚 My Vehicles</div><div class="page-subtitle">Manage your fleet availability and rates</div></div>
+            <button class="btn btn-primary" onclick="openModal('addVehicleModal')">+ Add Vehicle</button>
+          </div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;" id="vehiclesGrid"></div>
+        </div>
+
+        <!-- BOOKING REQUESTS -->
+        <div id="sec-bookings" style="display:none;">
+          <div class="page-header"><div class="page-title">📬 Booking Requests</div><div class="page-subtitle">Accept or decline transport bookings</div></div>
+          <div id="bookingsList"></div>
+        </div>
+
+        <!-- ACTIVE TRIPS -->
+        <div id="sec-active" style="display:none;">
+          <div class="page-header"><div class="page-title">🔴 Active Trips</div></div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;">
+            <div class="card">
+              <div class="flex justify-between items-center mb-3"><div class="font-semi">Trip #T-0821</div><span class="badge badge-amber">En Route</span></div>
+              <div style="display:flex;flex-direction:column;gap:0.5rem;" class="text-sm">
+                <div class="flex justify-between"><span class="text-muted">Vehicle</span><span>TN-09-AX-2341 (Mini Van)</span></div>
+                <div class="flex justify-between"><span class="text-muted">Driver</span><span>Arjun Sharma</span></div>
+                <div class="flex justify-between"><span class="text-muted">Load</span><span>Rose 50kg</span></div>
+                <div class="flex justify-between"><span class="text-muted">Route</span><span>Mysuru → Bangalore</span></div>
+                <div class="flex justify-between"><span class="text-muted">ETA</span><span class="text-success font-semi">9:30 AM</span></div>
+              </div>
+              <div class="mt-4"><div class="progress-bar"><div class="progress-fill" style="width:68%;"></div></div><div class="text-xs text-muted mt-1">68% of route completed</div></div>
+            </div>
+            <div class="card">
+              <div class="flex justify-between items-center mb-3"><div class="font-semi">Trip #T-0819</div><span class="badge badge-blue">Loading</span></div>
+              <div style="display:flex;flex-direction:column;gap:0.5rem;" class="text-sm">
+                <div class="flex justify-between"><span class="text-muted">Vehicle</span><span>KA-05-BX-7812 (Tempo)</span></div>
+                <div class="flex justify-between"><span class="text-muted">Driver</span><span>Mohan R.</span></div>
+                <div class="flex justify-between"><span class="text-muted">Load</span><span>Marigold 60kg</span></div>
+                <div class="flex justify-between"><span class="text-muted">Route</span><span>Tumkur → Bangalore</span></div>
+                <div class="flex justify-between"><span class="text-muted">Departure</span><span>10:30 AM</span></div>
+              </div>
+              <div class="mt-4"><div class="progress-bar"><div class="progress-fill" style="width:10%;"></div></div><div class="text-xs text-muted mt-1">Loading in progress</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEDGER (Vehicle) -->
+        <div id="sec-ledger" style="display:none;">
+          <div class="page-header"><div class="page-title">💰 Financial Ledger</div></div>
+          <div class="grid grid-4 gap-4 mb-6">
+            <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value text-green">₹68,400</div></div>
+            <div class="stat-card accent"><div class="stat-label">Fuel & Maintenance</div><div class="stat-value text-warning">₹14,800</div></div>
+            <div class="stat-card"><div class="stat-label">Driver Wages</div><div class="stat-value text-warning">₹22,000</div></div>
+            <div class="stat-card info"><div class="stat-label">Net Profit</div><div class="stat-value text-green">₹31,600</div></div>
+          </div>
+          <div class="card mb-4"><div style="height:260px;"><canvas id="vehicleLedgerChart"></canvas></div></div>
+          <div class="card">
+            <div class="font-semi mb-4">Trip Revenue History</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Trip</th><th>Route</th><th>Vehicle</th><th>Fare</th><th>Status</th></tr></thead>
+                <tbody id="vehicleTxTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAYMENTS -->
+        <div id="sec-payments" style="display:none;">
+          <div class="page-header"><div class="page-title">💳 Payments</div></div>
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+            <div class="card">
+              <div class="font-semi mb-4">Pay Drivers</div>
+              <div style="display:flex;flex-direction:column;gap:1rem;">
+                <div class="form-group"><label class="form-label">Driver</label><select class="form-select"><option>Arjun Sharma</option><option>Mohan R.</option><option>Suresh D.</option></select></div>
+                <div class="form-group"><label class="form-label">Amount (₹)</label><div class="input-group"><span class="input-icon">₹</span><input type="number" class="form-input" placeholder="8000"/></div></div>
+                <div class="form-group"><label class="form-label">Payment Type</label><select class="form-select"><option>Trip Payment</option><option>Monthly Salary</option><option>Advance</option></select></div>
+                <button class="btn btn-primary btn-lg" onclick="showToast('Driver paid!','success')">Pay Driver</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="font-semi mb-3">Receive from Clients</div>
+              <div style="text-align:center;padding:1rem;">
+                <div style="font-size:3rem;margin-bottom:0.75rem;">📱</div>
+                <div class="font-bold text-accent">vinod.transport@upi</div>
+                <div class="divider"></div>
+                <div class="font-semi mb-1">Bank Details</div>
+                <div class="text-sm text-muted">Punjab National Bank</div>
+                <div class="text-sm">IFSC: PUNB0001234</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <div class="bottom-nav-item active" onclick="switchSection('overview')"><span class="nav-icon">🏠</span>Home</div>
+      <div class="bottom-nav-item" onclick="switchSection('vehicles')"><span class="nav-icon">🚚</span>Fleet</div>
+      <div class="bottom-nav-item" onclick="switchSection('bookings')"><span class="nav-icon">📬</span>Bookings</div>
+      <div class="bottom-nav-item" onclick="switchSection('network')"><span class="nav-icon">🌐</span>People</div>
+      <div class="bottom-nav-item" onclick="switchSection('ledger')"><span class="nav-icon">💰</span>Ledger</div>
+      <div class="bottom-nav-item" onclick="switchSection('payments')"><span class="nav-icon">💳</span>Pay</div>
+    </div>
+  </nav>
+
+  <!-- Add Vehicle Modal -->
+  <div class="modal-overlay" id="addVehicleModal">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">🚚 Add New Vehicle</div><button class="modal-close" onclick="closeModal('addVehicleModal')">✕</button></div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Vehicle Type</label><select class="form-select"><option>Mini Van</option><option>Tempo</option><option>Lorry</option><option>Truck</option><option>Two-wheeler</option></select></div>
+          <div class="form-group"><label class="form-label">Registration No.</label><input type="text" class="form-input" placeholder="KA-XX-XXXX" style="text-transform:uppercase;"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Make & Model</label><input type="text" class="form-input" placeholder="Tata Ace, Mahindra Bolero..."/></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Capacity (kg)</label><input type="number" class="form-input" placeholder="500"/></div>
+          <div class="form-group"><label class="form-label">Rental Rate (₹/km)</label><input type="number" class="form-input" placeholder="12"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Base Charge (₹/trip)</label><input type="number" class="form-input" placeholder="300"/></div>
+        <div class="form-group"><label class="form-label">Insurance Expiry</label><input type="date" class="form-input"/></div>
+        <button class="btn btn-primary btn-lg w-full" onclick="closeModal('addVehicleModal');showToast('Vehicle added!','success')">Add Vehicle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">👤 My Profile</div><button class="modal-close" onclick="closeModal('profileModal')">✕</button></div>
+      <div class="text-center mb-4">
+        <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto 0.75rem;background:linear-gradient(135deg,#f59e0b,#d97706);">VR</div>
+        <div class="font-bold text-xl">Vinod Rajan Transport</div>
+        <div class="text-sm text-muted">🚚 Vehicle Owner · Bangalore, KA</div>
+        <span class="badge badge-green mt-2">KYC Verified</span>
+      </div>
+      <div class="flex gap-3 mt-4" style="flex-wrap:wrap;"><button class="btn btn-primary w-full" onclick="closeModal('profileModal')">Edit</button><a href="index.html" class="btn btn-danger w-full">Sign Out</a></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <!-- Profile Detail Modal -->
+  <div class="modal-overlay" id="profileDetailModal" onclick="if(event.target===this) closeModal('profileDetailModal')">
+    <div class="modal" style="max-width:550px;">
+      <div class="modal-header"><div class="modal-title">👤 Profile Showcase</div><button class="modal-close" onclick="closeModal('profileDetailModal')">✕</button></div>
+      <div class="text-center mb-4">
+        <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,var(--blue),#0D47A1);" id="pdAvatar">P</div>
+        <div class="font-bold text-xl" id="pdName">Name</div>
+        <div class="text-sm text-muted"><span id="pdRole">Role</span> · <span id="pdLoc">Location</span></div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;" id="pdDetails">
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="btn btn-primary flex-1" onclick="closeModal('profileDetailModal');openModal('connectModal')">🤝 Request Connection</button>
+        <button class="btn btn-outline flex-1" onclick="closeModal('profileDetailModal')">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connect Modal -->
+  <div class="modal-overlay" id="connectModal">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title">🤝 Send Connection Request</div><button class="modal-close" onclick="closeModal('connectModal')">✕</button></div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div id="connectTarget" class="font-semi text-center pb-2 border-b border-gray">Connecting...</div>
+        <div class="form-group"><label class="form-label">Purpose of Connection</label>
+          <select class="form-select" id="connPurpose">
+            <option value="buying">Buying / Sourcing Flowers</option>
+            <option value="selling">Selling / Supplying Flowers</option>
+            <option value="transport">Booking Transport</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Requested Settlement Cycle</label>
+          <select class="form-select" id="connBilling">
+            <option value="daily">Daily Settlement</option>
+            <option value="half_month">15-Day (Half-Month)</option>
+            <option value="monthly">Monthly Settlement</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Message (Optional)</label>
+          <textarea class="form-input" id="connMsg" rows="2" placeholder="Let's do business together..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-lg w-full" onclick="confirmConnection()">Send Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Modal -->
+  <div class="modal-overlay" id="chatModal">
+    <div class="modal" style="width:400px;padding:0;overflow:hidden;display:flex;flex-direction:column;height:80vh;max-height:600px;">
+      <div style="padding:1rem 1.5rem;background:var(--bg);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div class="font-semi" id="chatTitle">Direct Message</div>
+        <button class="modal-close" onclick="closeModal('chatModal')">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:1rem;background:#f9fafb;display:flex;flex-direction:column;gap:1rem;" id="chatMsgs">
+        <div class="text-center text-xs text-muted mb-2">Today</div>
+      </div>
+      <div style="padding:1rem;border-top:1px solid var(--border);background:#fff;display:flex;gap:.5rem;">
+        <input type="text" class="form-input" style="flex:1;" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()"/>
+        <button class="btn btn-primary" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/dashboard.js"></script>
+  <script src="assets/network.js"></script>
+  <script>
+    const sections=['overview','vehicles','bookings','network','active','ledger','payments'];
+    function switchSection(n){sections.forEach(s=>{const e=document.getElementById('sec-'+s);if(e)e.style.display=s===n?'block':'none';});}
+
+    const vehiclesData=[
+      {icon:'🚐',type:'Mini Van',reg:'TN-09-AX-2341',model:'Mahindra Maxximo',capacity:'500 kg',rate:'₹12/km',driver:'Arjun Sharma',available:true},
+      {icon:'🚛',type:'Tempo',reg:'KA-05-BX-7812',model:'Tata Ace Gold',capacity:'750 kg',rate:'₹15/km',driver:'Mohan R.',available:true},
+      {icon:'🚚',type:'Lorry',reg:'KA-01-CX-4521',model:'Ashok Leyland',capacity:'3000 kg',rate:'₹25/km',driver:'Suresh D.',available:false},
+      {icon:'🛵',type:'Two-wheeler',reg:'KA-09-DX-1234',model:'Hero Splendor',capacity:'50 kg',rate:'₹6/km',driver:'Girish S.',available:true},
+      {icon:'🚐',type:'Mini Van',reg:'TN-06-EX-9988',model:'Tata Magic',capacity:'500 kg',rate:'₹12/km',driver:'Unassigned',available:false},
+    ];
+    const bookingRequests=[
+      {from:'Suresh Agencies',route:'Mysuru → Bangalore',load:'Rose 50kg',date:'26 Mar',rate:'₹1,800',vehicle:'Mini Van'},
+      {from:'Ramesh Kumar Farms',route:'Mysuru → Chennai',load:'Jasmine 8kg',date:'27 Mar',rate:'₹4,200',vehicle:'Tempo'},
+      {from:'Ravi Decorations',route:'Tumkur → Mysuru',load:'Marigold 60kg',date:'27 Mar',rate:'₹1,200',vehicle:'Mini Van'},
+      {from:'Pooja Florals',route:'Bangalore Local',load:'Gerbera 200 stems',date:'26 Mar',rate:'₹600',vehicle:'Two-wheeler'},
+    ];
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      // Fleet overview (mini)
+      const fo=document.getElementById('fleetOverview');
+      vehiclesData.forEach(v=>{
+        fo.innerHTML+=`<div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;display:flex;gap:0.75rem;align-items:center;">
+          <span style="font-size:1.75rem;">${v.icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div class="font-semi text-sm truncate">${v.reg}</div>
+            <div class="text-xs text-muted">${v.type} · ${v.rate}</div>
+          </div>
+          <div class="toggle-wrap"><div class="toggle-switch ${v.available?'active':''}" data-on="Available" data-off="Unavailable"></div><span class="toggle-label text-xs" style="color:${v.available?'var(--success)':'var(--text-muted)'};">${v.available?'Available':'Unavailable'}</span></div>
+        </div>`;
+      });
+
+      // Vehicles grid
+      const grid=document.getElementById('vehiclesGrid');
+      vehiclesData.forEach(v=>{
+        grid.innerHTML+=`<div class="vehicle-card">
+          <div class="vehicle-icon">${v.icon}</div>
+          <div class="flex justify-between items-start mb-2">
+            <div><div class="font-semi">${v.reg}</div><div class="text-xs text-muted">${v.model}</div></div>
+            <span class="vehicle-type-badge">${v.type}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem;" class="text-sm">
+            <div class="flex justify-between"><span class="text-muted">Capacity</span><span>${v.capacity}</span></div>
+            <div class="flex justify-between"><span class="text-muted">Rate</span><span class="font-bold text-accent">${v.rate}</span></div>
+            <div class="flex justify-between"><span class="text-muted">Driver</span><span>${v.driver}</span></div>
+          </div>
+          <div class="toggle-wrap mb-3">
+            <div class="toggle-switch ${v.available?'active':''}" data-on="Available" data-off="Unavailable"></div>
+            <span class="toggle-label" style="color:${v.available?'var(--success)':'var(--text-muted)'};">${v.available?'Available':'Unavailable'}</span>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-ghost btn-sm flex-1" onclick="showToast('Editing vehicle...','info')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="showToast('Vehicle removed','warning')">Remove</button>
+          </div>
+        </div>`;
+      });
+
+      // Booking requests
+      const bl=document.getElementById('bookingsList');
+      const rb=document.getElementById('recentBookings');
+      bookingRequests.forEach((b,i)=>{
+        const card=`<div class="card" style="margin-bottom:0.75rem;">
+          <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:0.75rem;">
+            <div>
+              <div class="font-semi">${b.from}</div>
+              <div class="text-xs text-muted mt-1">📍 ${b.route} · ${b.load}</div>
+              <div class="text-xs text-muted mt-1">📅 ${b.date} · 🚐 ${b.vehicle}</div>
+            </div>
+            <div class="flex gap-2 items-center">
+              <span class="font-bold text-accent">${b.rate}</span>
+              <button class="btn btn-primary btn-sm" onclick="showToast('Booking accepted!','success')">Accept</button>
+              <button class="btn btn-danger btn-sm" onclick="showToast('Booking declined','warning')">Decline</button>
+            </div>
+          </div>
+        </div>`;
+        if(bl) bl.innerHTML+=card;
+        if(i<3 && rb) rb.innerHTML+=`<div style="background:var(--bg-elevated);border-radius:var(--radius-md);padding:0.75rem;">
+          <div class="font-semi text-sm">${b.from}</div>
+          <div class="text-xs text-muted">${b.route} · ${b.rate}</div>
+        </div>`;
+      });
+
+      // Charts
+      new Chart(document.getElementById('earningsChart').getContext('2d'),{
+        type:'bar',data:{labels:last6Months(),datasets:[{label:'Revenue',data:randArr(6,40000,80000),backgroundColor:'rgba(245,158,11,0.75)',borderRadius:6}]},
+        options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+      });
+      new Chart(document.getElementById('vehicleLedgerChart').getContext('2d'),{
+        type:'line',data:{labels:last6Months(),datasets:[
+          {label:'Revenue',data:randArr(6,40000,80000),borderColor:'#1a7a4a',fill:false,tension:0.4},
+          {label:'Fuel',data:randArr(6,5000,15000),borderColor:'#ef4444',fill:false,tension:0.4},
+          {label:'Driver Wages',data:randArr(6,10000,25000),borderColor:'#d4a017',fill:false,tension:0.4},
+        ]},
+        options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+      });
+
+      // Transaction table
+      const txData=[
+        {date:'26 Mar',trip:'#T-0821',route:'Mysuru → Blr',vehicle:'TN-09-AX-2341',fare:'₹1,800',st:'Pending'},
+        {date:'25 Mar',trip:'#T-0820',route:'Tumkur → Blr',vehicle:'KA-05-BX-7812',fare:'₹1,200',st:'Paid'},
+        {date:'24 Mar',trip:'#T-0818',route:'Mysuru → Chennai',vehicle:'KA-01-CX-4521',fare:'₹4,200',st:'Paid'},
+        {date:'22 Mar',trip:'#T-0816',route:'Blr Local',vehicle:'KA-09-DX-1234',fare:'₹600',st:'Paid'},
+      ];
+      const vt=document.getElementById('vehicleTxTable');
+      if(vt)txData.forEach(t=>{vt.innerHTML+=`<tr><td class="text-sm text-muted">${t.date}</td><td>${t.trip}</td><td class="text-sm">${t.route}</td><td class="text-sm">${t.vehicle}</td><td class="font-bold text-green">${t.fare}</td><td><span class="badge ${t.st==='Paid'?'badge-green':'badge-amber'}">${t.st}</span></td></tr>`;});
+      initToggles();
+    });
+  </script>
+</body>
+</html>

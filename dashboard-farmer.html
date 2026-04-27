@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Farmer Dashboard — FloraChain</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <link rel="icon" href="assets/logo.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{background:var(--bg);}
+    .listing-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-xs);transition:all var(--t-normal);}
+    .listing-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px);}
+    .listing-card .lc-img{height:120px;display:flex;align-items:center;justify-content:center;font-size:3.5rem;background:var(--bg);}
+    .listing-card .lc-body{padding:1rem;}
+    .listing-card .lc-name{font-weight:700;font-size:.95rem;}
+    .listing-card .lc-meta{font-size:.75rem;color:var(--text-3);margin-top:.2rem;}
+    .listing-card .lc-price{font-size:1.05rem;font-weight:800;color:var(--green-dark);margin:.5rem 0;}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="flex items-center gap-3">
+      <div class="hamburger" id="sidebarToggle"><span></span><span></span><span></span></div>
+      <a href="index.html" class="logo-mark"><img src="assets/logo.png" alt=""/>
+        <span class="logo-text hide-mobile">Flora<span style="color:var(--coral);">Chain</span></span></a>
+    </div>
+    <div class="flex items-center gap-3" style="margin-left:auto;">
+      <span class="live-badge hide-mobile"><span class="live-dot"></span> Market Open</span>
+      <div class="relative">
+        <button class="btn-icon notif-dot" onclick="document.getElementById('notifPanel').classList.toggle('open')">🔔</button>
+        <div class="notif-panel" id="notifPanel">
+          <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;">Notifications</div>
+          <div class="notif-item"><div class="notif-icon">🌸</div><div><div class="notif-text">New order: Rose 50kg from Suresh Agencies</div><div class="notif-time">5 mins ago</div></div></div>
+          <div class="notif-item"><div class="notif-icon">💰</div><div><div class="notif-text">₹12,000 payment received from Ramesh Traders</div><div class="notif-time">2 hrs ago</div></div></div>
+          <div class="notif-item"><div class="notif-icon">📈</div><div><div class="notif-text">Rose price UP 8.5% today — great time to list!</div><div class="notif-time">This morning</div></div></div>
+        </div>
+      </div>
+      <div class="avatar" onclick="openModal('profileModal')">RK</div>
+    </div>
+  </div>
+</header>
+
+<div id="sidebarOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;backdrop-filter:blur(4px);"></div>
+
+<div class="layout-wrapper">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Main</div>
+    <a class="sidebar-item active" onclick="switchSection('overview')"><span class="s-icon">🏠</span>Overview</a>
+    <a class="sidebar-item" onclick="switchSection('listings')"><span class="s-icon">🌸</span>My Listings <span class="sidebar-badge">4</span></a>
+    <a class="sidebar-item" onclick="switchSection('requests')"><span class="s-icon">📬</span>Buy Requests <span class="sidebar-badge">3</span></a>
+    <a class="sidebar-item" onclick="switchSection('market')"><span class="s-icon">📊</span>Market Rates</a>
+    <a class="sidebar-item" onclick="switchSection('network')"><span class="s-icon">🌐</span>People (Network)</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Finance</div>
+    <a class="sidebar-item" onclick="switchSection('ledger')"><span class="s-icon">💰</span>Ledger</a>
+    <a class="sidebar-item" onclick="switchSection('payments')"><span class="s-icon">💳</span>Payments</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Delivery</div>
+    <a class="sidebar-item" onclick="switchSection('tracking')"><span class="s-icon">🚚</span>Tracking</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Account</div>
+    <a class="sidebar-item" onclick="switchSection('settings')"><span class="s-icon">⚙️</span>Settings</a>
+    <a class="sidebar-item" href="index.html"><span class="s-icon">🔒</span>Sign Out</a>
+  </div>
+</nav>
+
+<main class="main-content">
+<div class="page-content">
+
+<!-- OVERVIEW -->
+<div id="sec-overview">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div>
+      <div class="page-title">Good morning, Ramesh 🌾</div>
+      <div class="page-subtitle">Thursday, 26 March 2026 · Rose Season is peaking!</div>
+    </div>
+    <button class="btn btn-cta" onclick="openModal('addListingModal')">+ Add New Listing</button>
+  </div>
+
+  <!-- Financial Summary Cards -->
+  <div class="grid grid-4 gap-4 mb-6">
+    <div class="stat-card" style="border-left-color:var(--green);">
+      <div class="stat-label">💰 Total Income (Mar)</div>
+      <div class="stat-value green" id="cntIncome">₹1,28,400</div>
+      <div class="stat-change up">▲ 18.4% vs Feb</div>
+    </div>
+    <div class="stat-card coral" style="border-left-color:var(--danger);">
+      <div class="stat-label">💸 Total Expenses</div>
+      <div class="stat-value" style="color:var(--danger);">₹42,180</div>
+      <div class="stat-change down">▲ 5.2% vs Feb</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">📈 Net Profit</div>
+      <div class="stat-value blue">₹86,220</div>
+      <div class="stat-change up">▲ 28.1% vs Feb</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">🌸 Active Listings</div>
+      <div class="stat-value" style="color:var(--warning);">4</div>
+      <div class="stat-change">4 live today</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="flex justify-between items-center mb-4">
+        <div class="font-semi">Revenue Trend</div>
+        <span class="badge badge-green">Last 6 Months</span>
+      </div>
+      <div style="height:220px;"><canvas id="revChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-4">Sales by Flower Type</div>
+      <div style="height:220px;"><canvas id="flowerChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Latest requests preview -->
+  <div class="card">
+    <div class="flex justify-between items-center mb-4">
+      <div class="font-semi">Latest Purchase Requests</div>
+      <button class="btn btn-outline btn-sm" onclick="switchSection('requests')">View All →</button>
+    </div>
+    <div id="reqPreview"></div>
+  </div>
+</div>
+
+<!-- LISTINGS -->
+<div id="sec-listings" style="display:none;">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div><div class="page-title">🌸 My Listings</div><div class="page-subtitle">Upload and manage your flower stock</div></div>
+    <button class="btn btn-cta" onclick="openModal('addListingModal')">+ Add Listing</button>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;" id="listingsGrid"></div>
+</div>
+
+<!-- BUY REQUESTS -->
+<div id="sec-requests" style="display:none;">
+  <div class="page-header"><div class="page-title">📬 Buy Requests</div></div>
+  <div class="tabs"><button class="tab-btn active" data-tab="req-new">New (3)</button><button class="tab-btn" data-tab="req-past">History (28)</button></div>
+  <div class="tab-content active" id="req-new" style="margin-top:1rem;">
+    <div id="requestsList"></div>
+  </div>
+  <div class="tab-content" id="req-past"><div class="text-muted p-4 text-sm">28 past orders on record</div></div>
+</div>
+
+<!-- MARKET RATES -->
+<div id="sec-market" style="display:none;">
+  <div class="page-header"><div class="page-title">📊 Today's Market Rates</div><div class="page-subtitle">Live rates updated every 15 minutes</div></div>
+  <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;">
+    <div class="card">
+      <div class="font-semi mb-4">Price History — Last 12 Months</div>
+      <div style="height:280px;"><canvas id="marketHistChart"></canvas></div>
+    </div>
+    <div class="card" style="padding:0;">
+      <div style="padding:1.25rem;border-bottom:1px solid var(--border);">
+        <div class="font-semi">Today's Rate Board</div>
+        <span class="live-badge mt-1"><span class="live-dot"></span> Live</span>
+      </div>
+      <div id="rateBoard"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LEDGER -->
+<div id="sec-ledger" style="display:none;">
+  <div class="page-header"><div class="page-title">💰 Financial Ledger</div></div>
+  <div class="grid grid-4 gap-4 mb-6">
+    <div class="stat-card"><div class="stat-label">Total Income</div><div class="stat-value green">₹1,28,400</div></div>
+    <div class="stat-card coral" style="border-left-color:var(--danger);"><div class="stat-label">Total Expenses</div><div class="stat-value" style="color:var(--danger);">₹42,180</div></div>
+    <div class="stat-card blue"><div class="stat-label">Net Profit</div><div class="stat-value blue">₹86,220</div></div>
+    <div class="stat-card orange"><div class="stat-label">Pending Dues</div><div class="stat-value" style="color:var(--warning);">₹18,000</div></div>
+  </div>
+  <div class="card mb-4"><div class="font-semi mb-4">Monthly Summary</div><div style="height:260px;"><canvas id="ledgerChart"></canvas></div></div>
+  <div class="card">
+    <div class="flex justify-between items-center mb-4">
+      <div class="font-semi">Transaction History</div>
+      <button class="btn btn-outline btn-sm">Export CSV</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Description</th><th>Party</th><th>Type</th><th>Amount</th><th>Mode</th><th>Status</th></tr></thead>
+      <tbody id="ledgerTable"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- PAYMENTS -->
+<div id="sec-payments" style="display:none;">
+  <div class="page-header"><div class="page-title">💳 Payments</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div class="card">
+      <div class="font-semi mb-4">Receive Payment</div>
+      <div class="text-center" style="padding:1.5rem 0;">
+        <div style="font-size:3rem;margin-bottom:.75rem;">📱</div>
+        <div class="font-bold" style="color:var(--green-dark);font-size:1.1rem;">ramesh.farmer@upi</div>
+        <div class="text-xs text-muted mt-1">Share this UPI ID to receive payments</div>
+        <button class="btn btn-primary btn-sm mt-3" onclick="showToast('UPI ID copied!','success')">Copy UPI ID</button>
+      </div>
+      <div class="divider"></div>
+      <div class="font-semi mb-2 text-sm">Bank Details</div>
+      <div class="text-sm text-muted">Bank of India · IFSC: BKID0001234</div>
+      <div class="text-sm text-muted">A/C: XXXX XXXX 5678</div>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-3">Pending Receivables</div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;">
+        <div class="card-green" style="padding:1rem;border-radius:var(--radius-md);">
+          <div class="flex justify-between"><div><div class="font-semi text-sm">Shivam Flowers Agency</div><div class="text-xs text-muted">15-day billing · Due 10 Apr</div></div><div class="font-bold" style="color:var(--green-dark);">₹12,000</div></div>
+        </div>
+        <div style="background:#FFF8E1;border:1px solid #FFE082;border-radius:var(--radius-md);padding:1rem;">
+          <div class="flex justify-between"><div><div class="font-semi text-sm">Ravi Store</div><div class="text-xs text-muted">Monthly · Due 30 Mar</div></div><div class="font-bold" style="color:var(--warning);">₹6,000</div></div>
+        </div>
+        <div style="background:#FFEBEE;border:1px solid #FFCDD2;border-radius:var(--radius-md);padding:1rem;">
+          <div class="flex justify-between"><div><div class="font-semi text-sm">Pooja Decorators</div><div class="text-xs" style="color:var(--danger);">Overdue!</div></div><div class="font-bold" style="color:var(--danger);">₹3,500</div></div>
+          <button class="btn btn-sm w-full mt-2" style="background:var(--danger);color:#fff;" onclick="showToast('Payment reminder sent!','success')">Send Reminder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TRACKING -->
+<div id="sec-tracking" style="display:none;">
+  <div class="page-header"><div class="page-title">🚚 Delivery Tracking</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div class="card">
+      <div class="flex justify-between items-center mb-4"><div class="font-semi">Order #FC-4821 · Rose 50kg</div><span class="badge badge-orange">In Transit</span></div>
+      <div class="tracker-line">
+        <div class="tracker-event"><div class="tracker-dot done"></div><div><div class="tracker-title">✅ Order Confirmed</div><div class="tracker-time">25 Mar · 10:00 PM</div></div></div>
+        <div class="tracker-event"><div class="tracker-dot done"></div><div><div class="tracker-title">✅ Picked up from Farm</div><div class="tracker-time">26 Mar · 6:30 AM · Mysuru</div></div></div>
+        <div class="tracker-event"><div class="tracker-dot active"></div><div><div class="tracker-title">🔴 In Transit · 45 km away</div><div class="tracker-time">ETA: 9:30 AM · Driver: Arjun S.</div></div></div>
+        <div class="tracker-event"><div class="tracker-dot"></div><div><div class="tracker-title">⏳ Delivered to Store</div><div class="tracker-time">Pending</div></div></div>
+        <div class="tracker-event"><div class="tracker-dot"></div><div><div class="tracker-title">⏳ Payment Due</div><div class="tracker-time">15-day billing · Due: 10 Apr</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-3">Driver Details</div>
+      <div class="flex gap-3 items-center mb-4">
+        <div class="avatar" style="width:52px;height:52px;font-size:1.1rem;">AS</div>
+        <div><div class="font-semi">Arjun Sharma</div><div class="text-xs text-muted">⭐ 4.8 · 342 trips</div></div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;" class="text-sm">
+        <div class="flex justify-between"><span class="text-muted">Vehicle</span><span>Mini Van · TN-09-AX-2341</span></div>
+        <div class="flex justify-between"><span class="text-muted">Distance remaining</span><span>45 km</span></div>
+        <div class="flex justify-between"><span class="text-muted">ETA</span><span class="font-semi" style="color:var(--green-dark);">9:30 AM</span></div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="btn btn-primary flex-1" onclick="showToast('Calling driver...','info')">📞 Call Driver</button>
+        <button class="btn btn-outline flex-1" onclick="showToast('Chat opened','info')">💬 Chat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NETWORK -->
+<div id="sec-network" style="display:none;">
+  <div class="page-header"><div class="page-title">🌐 Universal Discovery</div><div class="page-subtitle">Search, follow, and connect with everyone across FloraChain</div></div>
+  <div class="card mb-4">
+    <div class="flex gap-3 mb-2" style="flex-wrap:wrap;">
+      <div class="input-group" style="flex:1;min-width:200px;"><span class="input-icon">🔍</span><input class="form-input" id="netSearch" placeholder="Search by name, role, or location..." oninput="renderPeople()"/></div>
+      <select class="form-select" style="width:auto;" id="netRole" onchange="renderPeople()">
+        <option value="all">All Roles</option>
+        <option value="farmer">👨‍🌾 Farmers</option>
+        <option value="agent">🤝 Agents</option>
+        <option value="store">🏪 Store Owners</option>
+        <option value="vehicle">🚛 Vehicles & Drivers</option>
+      </select>
+    </div>
+  </div>
+  <div class="tabs mb-4">
+    <button class="tab-btn active" data-tab="net-all" onclick="renderPeople('all')">Discover People</button>
+    <button class="tab-btn" data-tab="net-conn" onclick="renderPeople('conn')">My Connections</button>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;" id="peopleGrid"></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="sec-settings" style="display:none;">
+  <div class="page-header"><div class="page-title">⚙️ Account Settings</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div class="card">
+      <div class="font-semi mb-4">Edit Flower Preferences</div>
+      <div class="form-label mb-2">Flowers you currently sell:</div>
+      <div class="flower-grid">
+        <span class="flower-chip sel" onclick="this.classList.toggle('sel')">🌸 Rose</span>
+        <span class="flower-chip sel" onclick="this.classList.toggle('sel')">🌼 Marigold</span>
+        <span class="flower-chip" onclick="this.classList.toggle('sel')">⚪ Jasmine</span>
+        <span class="flower-chip sel" onclick="this.classList.toggle('sel')">🌺 Gerbera</span>
+        <span class="flower-chip" onclick="this.classList.toggle('sel')">🪷 Lotus</span>
+        <span class="flower-chip" onclick="this.classList.toggle('sel')">🌻 Sunflower</span>
+      </div>
+      <button class="btn btn-primary btn-sm mt-4" onclick="showToast('Preferences saved!','success')">Save Preferences</button>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-4">Billing Settings</div>
+      <div class="form-group mb-3"><label class="form-label">Default Billing Cycle</label><select class="form-select"><option>Daily</option><option>10 Days</option><option selected>15 Days</option><option>Monthly</option></select></div>
+      <div class="form-group mb-3"><label class="form-label">UPI ID</label><input class="form-input" value="ramesh.farmer@upi"/></div>
+      <button class="btn btn-primary btn-sm" onclick="showToast('Settings saved!','success')">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- page-content -->
+</main>
+</div><!-- layout-wrapper -->
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <div class="bottom-nav-item active" onclick="switchSection('overview')"><span class="nav-icon">🏠</span>Home</div>
+    <div class="bottom-nav-item" onclick="switchSection('listings')"><span class="nav-icon">🌸</span>Listings</div>
+    <div class="bottom-nav-item" onclick="openModal('addListingModal')"><span class="nav-icon" style="font-size:2rem;background:var(--coral);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:-8px;color:#fff;">+</span>List</div>
+    <div class="bottom-nav-item" onclick="switchSection('ledger')"><span class="nav-icon">💰</span>Ledger</div>
+    <div class="bottom-nav-item" onclick="switchSection('network')"><span class="nav-icon">🌐</span>People</div>
+  </div>
+</nav>
+
+<!-- Add Listing Modal -->
+<div class="modal-overlay" id="addListingModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🌸 Add New Listing</div><button class="modal-close" onclick="closeModal('addListingModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Flower Type</label>
+          <select class="form-select" id="lFlowerType"><option value="rose">Rose</option><option value="marigold">Marigold</option><option value="jasmine">Jasmine</option><option value="lotus">Lotus</option><option value="gerbera">Gerbera</option></select></div>
+        <div class="form-group"><label class="form-label">Quality Grade</label>
+          <select class="form-select" id="lGrade"><option value="A_premium">Grade A (Premium)</option><option value="B_standard">Grade B (Standard)</option><option value="C_economy">Grade C (Economy)</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-input" id="lQty" placeholder="50"/></div>
+        <div class="form-group"><label class="form-label">Unit</label>
+          <select class="form-select" id="lUnit"><option value="kg">kg</option><option value="dozen">dozen</option><option value="piece">pieces</option><option value="bunch">bunch</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Your Price (₹)</label><input type="number" class="form-input" id="lPrice" placeholder="115"/></div>
+      <div class="form-group"><label class="form-label">Photos (JPG/PNG, max 5 MB)</label>
+        <label class="upload-zone" id="uploadZone">
+          <input type="file" accept="image/jpeg,image/png,image/webp" id="lImage" style="display:none;" onchange="previewImage(this)"/>
+          <div class="upload-icon" id="uploadIcon">📷</div>
+          <div class="font-semi text-sm" id="uploadLabel">Upload flower photo</div>
+          <div class="text-xs text-muted mt-1">JPG / PNG · Max 5 MB</div>
+        </label>
+        <div id="uploadProgress" style="display:none;margin-top:.5rem;">
+          <div class="progress-bar"><div class="progress-fill" id="uploadBar" style="width:0%"></div></div>
+          <div class="text-xs text-muted mt-1" id="uploadStatus">Uploading…</div>
+        </div>
+      </div>
+      <div id="listingError" class="form-error" style="display:none;"></div>
+      <button class="btn btn-cta btn-lg w-full" id="publishBtn" onclick="publishListing()">🌸 Publish Listing</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">My Profile</div><button class="modal-close" onclick="closeModal('profileModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;">RK</div>
+      <div class="font-bold text-xl">Ramesh Kumar</div>
+      <div class="text-sm text-muted">🌾 Farmer · Mysuru, Karnataka</div>
+      <span class="badge badge-green mt-2">KYC Verified</span>
+    </div>
+    <div class="flex gap-3 mt-4" style="flex-wrap:wrap;"><button class="btn btn-primary w-full" onclick="closeModal('profileModal');switchSection('settings')">Edit Profile</button><a href="index.html" class="btn btn-danger-ghost w-full">Sign Out</a></div>
+  </div>
+</div>
+
+<!-- Connect Modal -->
+<div class="modal-overlay" id="connectModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🤝 Send Connection Request</div><button class="modal-close" onclick="closeModal('connectModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div id="connectTarget" class="font-semi text-center pb-2 border-b border-gray">Connecting...</div>
+      <div class="form-group"><label class="form-label">Purpose of Connection</label>
+        <select class="form-select" id="connPurpose">
+          <option value="buying">Buying / Sourcing Flowers</option>
+          <option value="selling">Selling / Supplying Flowers</option>
+          <option value="transport">Booking Transport</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Requested Settlement Cycle</label>
+        <select class="form-select" id="connBilling">
+          <option value="daily">Daily Settlement</option>
+          <option value="half_month">15-Day (Half-Month)</option>
+          <option value="monthly">Monthly Settlement</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Message (Optional)</label>
+        <textarea class="form-input" id="connMsg" rows="2" placeholder="Let's do business together..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-lg w-full" onclick="confirmConnection()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Modal -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal" style="width:400px;padding:0;overflow:hidden;display:flex;flex-direction:column;height:80vh;max-height:600px;">
+    <div style="padding:1rem 1.5rem;background:var(--bg);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div class="font-semi" id="chatTitle">Direct Message</div>
+      <button class="modal-close" onclick="closeModal('chatModal')">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:1rem;background:#f9fafb;display:flex;flex-direction:column;gap:1rem;" id="chatMsgs">
+      <div class="text-center text-xs text-muted mb-2">Today</div>
+    </div>
+    <div style="padding:1rem;border-top:1px solid var(--border);background:#fff;display:flex;gap:.5rem;">
+      <input type="text" class="form-input" style="flex:1;" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()"/>
+      <button class="btn btn-primary" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Detail Modal -->
+<div class="modal-overlay" id="profileDetailModal" onclick="if(event.target===this) closeModal('profileDetailModal')">
+  <div class="modal" style="max-width:550px;">
+    <div class="modal-header"><div class="modal-title">👤 Profile Showcase</div><button class="modal-close" onclick="closeModal('profileDetailModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,var(--blue),#0D47A1);" id="pdAvatar">P</div>
+      <div class="font-bold text-xl" id="pdName">Name</div>
+      <div class="text-sm text-muted"><span id="pdRole">Role</span> · <span id="pdLoc">Location</span></div>
+    </div>
+    <div style="background:#f9fafb;border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;" id="pdDetails">
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-primary flex-1" onclick="closeModal('profileDetailModal');openModal('connectModal')">🤝 Request Connection</button>
+      <button class="btn btn-outline flex-1" onclick="closeModal('profileDetailModal')">Back</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="assets/dashboard.js"></script>
+<script src="assets/network.js"></script>
+<script>
+window.sections=['overview','listings','requests','market','network','ledger','payments','tracking','settings'];
+
+const listings=[
+  {emoji:'🌸',name:'Rose',grade:'Grade A',qty:'80 kg',price:'₹115/kg',status:'active'},
+  {emoji:'🌼',name:'Marigold',grade:'Grade B',qty:'40 kg',price:'₹43/kg',status:'active'},
+  {emoji:'🌺',name:'Gerbera',grade:'Grade A',qty:'200 stems',price:'₹16/stem',status:'active'},
+  {emoji:'⚪',name:'Jasmine',grade:'Grade A',qty:'5 kg',price:'₹265/kg',status:'soldout'},
+];
+const buyRequests=[
+  {buyer:'Shivam Flowers Agency',flower:'🌸 Rose',qty:'50 kg',offer:'₹115/kg',billing:'Monthly',date:'27 Mar'},
+  {buyer:'Ramesh Traders',flower:'🌼 Marigold',qty:'20 kg',offer:'₹40/kg',billing:'15 Days',date:'27 Mar'},
+  {buyer:'Pooja Decorators',flower:'🌸 Rose',qty:'30 kg',offer:'₹112/kg',billing:'10 Days',date:'28 Mar'},
+];
+const marketData=[
+  {emoji:'🌸',name:'Rose',price:'₹120/kg',chg:'+8.5%',up:true},
+  {emoji:'🌼',name:'Marigold',price:'₹45/kg',chg:'-2.1%',up:false},
+  {emoji:'⚪',name:'Jasmine',price:'₹280/kg',chg:'+14.2%',up:true},
+  {emoji:'🪷',name:'Lotus',price:'₹95/doz',chg:'+3.7%',up:true},
+  {emoji:'💐',name:'Chrysanthemum',price:'₹60/kg',chg:'-5.9%',up:false},
+  {emoji:'🌺',name:'Gerbera',price:'₹18/stem',chg:'+1.2%',up:true},
+];
+const ledgerData=[
+  {date:'26 Mar',desc:'Rose 50kg',party:'Shivam Agency',type:'Income',amt:'₹5,750',mode:'UPI',st:'Received'},
+  {date:'25 Mar',desc:'Marigold 20kg',party:'Ramesh Traders',type:'Income',amt:'₹800',mode:'Bank',st:'Received'},
+  {date:'24 Mar',desc:'Fertiliser cost',party:'Agro Store',type:'Expense',amt:'₹1,200',mode:'Cash',st:'Paid'},
+  {date:'22 Mar',desc:'Gerbera 100 stems',party:'Pooja Decorators',type:'Income',amt:'₹1,600',mode:'UPI',st:'Pending'},
+];
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // Listings Grid
+  const lg=document.getElementById('listingsGrid');
+  listings.forEach(l=>{
+    lg.innerHTML+=`<div class="listing-card">
+      <div class="lc-img">${l.emoji}</div>
+      <div class="lc-body">
+        <div class="lc-name">${l.name} <span class="badge ${l.status==='active'?'badge-green':'badge-grey'} ml-1">${l.status}</span></div>
+        <div class="lc-meta">${l.grade} · ${l.qty}</div>
+        <div class="lc-price">${l.price}</div>
+        <div class="flex gap-2">
+          <button class="btn btn-outline-green btn-sm flex-1" onclick="showToast('Editing...','info')">Edit</button>
+          <button class="btn btn-sm" style="background:#FFEBEE;color:var(--danger);border:1px solid #FFCDD2;" onclick="showToast('Removed','warning')">Remove</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Requests
+  const rl=document.getElementById('requestsList');
+  const rp=document.getElementById('reqPreview');
+  buyRequests.forEach((r,i)=>{
+    const card=`<div class="request-card">
+      <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:.75rem;">
+        <div>
+          <div class="font-semi">${r.flower} — ${r.qty}</div>
+          <div class="text-xs text-muted mt-1">👤 ${r.buyer} · 💳 Billing: <strong>${r.billing}</strong> · 📅 ${r.date}</div>
+        </div>
+        <div class="flex gap-2 items-center">
+          <span class="badge badge-green">${r.offer} offered</span>
+          <button class="btn btn-primary btn-sm" onclick="showToast('Order accepted!','success')">Accept</button>
+          <button class="btn btn-sm btn-danger-ghost" onclick="showToast('Order declined','warning')">Decline</button>
+        </div>
+      </div>
+    </div>`;
+    if(rl) rl.innerHTML+=card;
+    if(i<2 && rp) rp.innerHTML+=card;
+  });
+
+  // Rate board
+  const rb=document.getElementById('rateBoard');
+  marketData.forEach(m=>{ rb.innerHTML+=`<div class="market-row"><div class="market-flower"><span class="market-emoji">${m.emoji}</span><div class="market-name">${m.name}</div></div><div class="text-right"><div class="market-price">${m.price}</div><div class="market-change ${m.up?'up':'down'}">${m.chg}</div></div></div>`; });
+
+  // Ledger table
+  const lt=document.getElementById('ledgerTable');
+  ledgerData.forEach(t=>{ lt.innerHTML+=`<tr><td class="text-sm text-muted">${t.date}</td><td class="font-medium">${t.desc}</td><td class="text-sm">${t.party}</td><td><span class="badge ${t.type==='Income'?'badge-green':'badge-coral'}">${t.type}</span></td><td class="font-bold ${t.type==='Income'?'text-green':'text-danger'}">${t.amt}</td><td class="text-sm">${t.mode}</td><td><span class="badge ${t.st==='Received'||t.st==='Paid'?'badge-green':'badge-orange'}">${t.st}</span></td></tr>`; });
+
+  // Charts
+  new Chart(document.getElementById('revChart').getContext('2d'),{
+    type:'line', data:{labels:last6Months(),datasets:[
+      {label:'Revenue',data:randArr(6,80000,140000),borderColor:C.green,backgroundColor:C.greenLt,fill:true,tension:.4,borderWidth:2.5,pointRadius:4,pointBackgroundColor:C.green},
+      {label:'Expenses',data:randArr(6,20000,50000),borderColor:C.coral,backgroundColor:'transparent',tension:.4,borderWidth:2,pointRadius:3,pointBackgroundColor:C.coral}
+    ]}, options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+  });
+  new Chart(document.getElementById('flowerChart').getContext('2d'),{
+    type:'doughnut', data:{labels:['Rose','Marigold','Jasmine','Others'],datasets:[{data:[52,24,16,8],backgroundColor:[C.coral,'#FFB300',C.green,C.blue],borderWidth:2,borderColor:'#fff',hoverBorderWidth:0}]},
+    options:{...getNoAxisDefaults(),responsive:true,maintainAspectRatio:false,cutout:'65%'}
+  });
+  new Chart(document.getElementById('marketHistChart').getContext('2d'),{
+    type:'line', data:{labels:last12Months(),datasets:[
+      {label:'Rose (₹/kg)',data:randArr(12,90,140),borderColor:C.coral,tension:.4,borderWidth:2},
+      {label:'Marigold (₹/kg)',data:randArr(12,30,60),borderColor:'#FFB300',tension:.4,borderWidth:2},
+    ]}, options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+  });
+  new Chart(document.getElementById('ledgerChart').getContext('2d'),{
+    type:'bar', data:{labels:last6Months(),datasets:[
+      {label:'Income',data:randArr(6,80000,140000),backgroundColor:C.greenLt,borderColor:C.green,borderWidth:2,borderRadius:6},
+      {label:'Expenses',data:randArr(6,20000,50000),backgroundColor:C.coralLt,borderColor:C.coral,borderWidth:2,borderRadius:6}
+    ]}, options:{...getChartDefaults(),responsive:true,maintainAspectRatio:false}
+  });
+
+  renderPeople('all');
+});
+
+// Inline flower-chip style for settings
+const style=document.createElement('style');
+style.textContent=`.flower-grid{display:flex;flex-wrap:wrap;gap:.5rem;}.flower-chip{padding:.4rem .9rem;border-radius:var(--radius-full);border:1.5px solid var(--border);background:#fff;font-size:.8rem;font-weight:600;color:var(--text-2);cursor:pointer;transition:all var(--t-fast);}.flower-chip.sel{background:var(--green-xlight);border-color:var(--green);color:var(--green-dark);}`;
+
+// ── Image preview ─────────────────────────────────────────────────
+function previewImage(input){
+  const file=input.files[0];if(!file)return;
+  document.getElementById('uploadIcon').textContent='✅';
+  document.getElementById('uploadLabel').textContent=file.name+' ('+Math.round(file.size/1024)+' KB)';
+}
+
+// ── Publish Listing — calls backend API ───────────────────────────
+async function publishListing(){
+  const errEl=document.getElementById('listingError');
+  errEl.style.display='none';
+  const category=document.getElementById('lFlowerType').value;
+  const grade=document.getElementById('lGrade').value;
+  const qty=parseFloat(document.getElementById('lQty').value);
+  const unit=document.getElementById('lUnit').value;
+  const price=parseFloat(document.getElementById('lPrice').value);
+  const imageFile=document.getElementById('lImage').files[0];
+  if(!category||!grade||!qty||!price){errEl.textContent='Please fill all fields.';errEl.style.display='block';return;}
+  const btn=document.getElementById('publishBtn');
+  btn.disabled=true;btn.textContent='Publishing…';
+  try{
+    let imageUrl='';
+    // Step 1: Upload image if provided
+    if(imageFile){
+      const prog=document.getElementById('uploadProgress');
+      prog.style.display='block';
+      document.getElementById('uploadBar').style.width='40%';
+      document.getElementById('uploadStatus').textContent='Uploading image…';
+      const fd=new FormData();fd.append('image',imageFile);
+      const upRes=await fetch('http://localhost:8000/api/market/upload-flower-image/',{method:'POST',body:fd});
+      document.getElementById('uploadBar').style.width='70%';
+      if(!upRes.ok){const e=await upRes.json();throw new Error(e.error||'Image upload failed');}
+      const upData=await upRes.json();
+      imageUrl=upData.image_url;
+      document.getElementById('uploadBar').style.width='100%';
+      document.getElementById('uploadStatus').textContent='Image uploaded ✅';
+    }
+    // Step 2: Create listing
+    const payload={
+      seller:1, vendor_role:'farmer', category, name:category.charAt(0).toUpperCase()+category.slice(1),
+      grade, price, unit, stock_quantity:qty, min_order_qty:1,
+      return_policy:'non_returnable', image_url:imageUrl, is_active:true,
+      description:'Fresh '+category+' from farm — '+grade
+    };
+    const res=await fetch('http://localhost:8000/api/market/listings/',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+    });
+    if(!res.ok){const e=await res.json();throw new Error(JSON.stringify(e));}
+    closeModal('addListingModal');
+    showToast('✅ Listing published successfully!','success');
+    document.getElementById('lQty').value='';
+    document.getElementById('lPrice').value='';
+    document.getElementById('uploadIcon').textContent='📷';
+    document.getElementById('uploadLabel').textContent='Upload flower photo';
+    document.getElementById('uploadProgress').style.display='none';
+    document.getElementById('lImage').value='';
+  }catch(err){
+    errEl.textContent='Error: '+err.message;errEl.style.display='block';
+    showToast('❌ '+err.message,'error');
+  }finally{
+    btn.disabled=false;btn.textContent='🌸 Publish Listing';
+  }
+}
+document.head.appendChild(style);
+</script>
+</body>
+</html>

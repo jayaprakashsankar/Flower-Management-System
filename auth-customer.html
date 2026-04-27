@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Customer Login — FloraChain Shop</title>
+<meta name="description" content="Sign in or create a FloraChain customer account to shop fresh flowers directly from farmers and stores."/>
+<link rel="stylesheet" href="assets/styles.css"/>
+<link rel="icon" href="assets/logo.png"/>
+<style>
+body{background:var(--bg);min-height:100vh;}
+
+/* ── Layout ── */
+.auth-layout{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;}
+
+/* ── Left Panel ── */
+.auth-side{
+  background:linear-gradient(160deg,#AD1457 0%,#6A1B9A 55%,#283593 100%);
+  padding:3rem;display:flex;flex-direction:column;justify-content:space-between;
+  position:sticky;top:0;height:100vh;overflow:hidden;
+}
+.auth-side::before{
+  content:'';position:absolute;inset:0;
+  background:url('assets/profile_customer.png') center/cover no-repeat;
+  opacity:.18;pointer-events:none;
+}
+.side-content{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;justify-content:space-between;}
+.side-logo{display:flex;align-items:center;gap:.65rem;font-weight:900;font-size:1.25rem;color:#fff;}
+.side-logo img{width:38px;height:38px;border-radius:8px;}
+.side-hero{margin-top:2.5rem;}
+.side-title{font-size:2rem;font-weight:900;color:#fff;line-height:1.2;margin-bottom:.75rem;}
+.side-sub{font-size:.9rem;color:rgba(255,255,255,.75);line-height:1.75;}
+.side-pill{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  border-radius:var(--radius-full);padding:.35rem .9rem;
+  font-size:.78rem;font-weight:600;color:#fff;margin-top:2rem;
+}
+.side-features{margin-top:2.5rem;display:flex;flex-direction:column;gap:.85rem;}
+.sf-row{display:flex;align-items:center;gap:.75rem;}
+.sf-ic{width:36px;height:36px;border-radius:var(--radius-md);background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;}
+.sf-tx{font-size:.83rem;color:rgba(255,255,255,.85);line-height:1.5;}
+.sf-tx strong{color:#fff;}
+.side-quote{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-xl);padding:1.25rem;}
+.sq-text{font-size:.85rem;color:rgba(255,255,255,.85);font-style:italic;line-height:1.7;margin-bottom:.5rem;}
+.sq-name{font-size:.78rem;color:rgba(255,255,255,.5);font-weight:600;}
+/* flower illustrations floating */
+.float-flowers{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden;z-index:0;}
+.ffl{position:absolute;font-size:1.8rem;animation:floatAnim linear infinite;opacity:.18;}
+@keyframes floatAnim{from{transform:translateY(110%) rotate(0deg)}to{transform:translateY(-20%) rotate(360deg)}}
+
+/* ── Right Panel ── */
+.auth-main{display:flex;align-items:flex-start;justify-content:center;padding:2.5rem 2rem;overflow-y:auto;min-height:100vh;}
+.auth-box{width:100%;max-width:480px;}
+
+/* ── Tabs ── */
+.auth-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:2rem;}
+.auth-tab{flex:1;text-align:center;padding:.75rem;font-weight:600;font-size:.9rem;color:var(--text-3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all var(--t-fast);}
+.auth-tab.active{color:#AD1457;border-bottom-color:#AD1457;}
+
+/* ── Social buttons ── */
+.social-btn{display:flex;align-items:center;justify-content:center;gap:.65rem;width:100%;padding:.7rem;border:1.5px solid var(--border);border-radius:var(--radius-full);font-size:.9rem;font-weight:600;color:var(--text-2);cursor:pointer;transition:all var(--t-fast);background:#fff;}
+.social-btn:hover{background:var(--bg);border-color:var(--border-dark);}
+.social-btn img{width:20px;height:20px;}
+
+/* ── Wizard bar ── */
+.wiz-bar{display:flex;align-items:center;margin-bottom:2rem;}
+.wiz-step{display:flex;flex-direction:column;align-items:center;flex:1;}
+.wiz-circle{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:var(--text-4);background:#fff;transition:all var(--t-normal);position:relative;z-index:1;}
+.wiz-circle.done{background:#AD1457;border-color:#AD1457;color:#fff;}
+.wiz-circle.active{border-color:#AD1457;color:#AD1457;box-shadow:0 0 0 4px rgba(173,20,87,.15);}
+.wiz-lbl{font-size:.6rem;font-weight:700;margin-top:.35rem;color:var(--text-4);text-align:center;}
+.wiz-lbl.active{color:#AD1457;}
+.wiz-lbl.done{color:var(--text-3);}
+.wiz-line{flex:1;height:2px;background:var(--border);margin-bottom:18px;transition:background var(--t-slow);}
+.wiz-line.done{background:#AD1457;}
+
+/* ── Primary btn override for customer (pink) ── */
+.btn-customer{background:#AD1457;color:#fff;box-shadow:0 4px 20px rgba(173,20,87,.28);border-radius:var(--radius-full);display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.65rem 1.5rem;font-size:.9rem;font-weight:600;transition:all var(--t-normal);cursor:pointer;}
+.btn-customer:hover{background:#880E4F;box-shadow:0 6px 24px rgba(173,20,87,.38);transform:translateY(-1px);}
+.btn-customer:disabled{opacity:.6;transform:none;cursor:not-allowed;}
+.btn-customer-lg{padding:.85rem 2rem;font-size:1rem;}
+
+/* interest chips */
+.flower-grid{display:flex;flex-wrap:wrap;gap:.5rem;}
+.flower-chip{padding:.4rem .9rem;border-radius:var(--radius-full);border:1.5px solid var(--border);background:#fff;font-size:.8rem;font-weight:600;color:var(--text-2);cursor:pointer;transition:all var(--t-fast);}
+.flower-chip:hover{border-color:#AD1457;color:#AD1457;}
+.flower-chip.sel{background:#FCE4EC;border-color:#AD1457;color:#AD1457;}
+
+/* avatar upload */
+.avatar-upload-wrap{display:flex;flex-direction:column;align-items:center;gap:.75rem;}
+.avatar-preview{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #F48FB1;cursor:pointer;transition:all var(--t-normal);}
+.avatar-preview:hover{box-shadow:0 0 0 4px rgba(173,20,87,.2);}
+
+/* success */
+.success-wrap{text-align:center;padding:2rem 0;}
+.success-circle{width:100px;height:100px;border-radius:50%;background:#FCE4EC;border:3px solid #AD1457;display:flex;align-items:center;justify-content:center;font-size:3rem;margin:0 auto 1.5rem;animation:bounceIn .6s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes bounceIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* pwd bars */
+.pwd-bars{display:flex;gap:4px;height:4px;margin-top:.4rem;}
+.pwd-bar{flex:1;background:var(--border);border-radius:2px;transition:background .3s;}
+.strength-1 .pwd-bar:nth-child(1){background:var(--danger);}
+.strength-2 .pwd-bar:nth-child(-n+2){background:var(--warning);}
+.strength-3 .pwd-bar:nth-child(-n+3){background:var(--coral);}
+.strength-4 .pwd-bar{background:var(--success);}
+
+/* reg-step */
+.reg-step{display:none;}
+.reg-step.active{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* focus overrides (use pink) */
+.form-input:focus{border-color:#AD1457;box-shadow:0 0 0 3px rgba(173,20,87,.12);}
+.form-select:focus{border-color:#AD1457;box-shadow:0 0 0 3px rgba(173,20,87,.12);}
+
+@media(max-width:768px){
+  .auth-layout{grid-template-columns:1fr;}
+  .auth-side{display:none;}
+  .auth-main{padding:2rem 1rem;min-height:auto;}
+}
+</style>
+</head>
+<body>
+
+<!-- Top nav bar -->
+<div style="position:fixed;top:0;left:0;right:0;height:52px;background:#fff;border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:0 1.25rem;gap:1rem;">
+  <a href="index.html" class="btn btn-ghost btn-sm">← Back</a>
+  <a href="index.html" class="logo-mark" style="font-size:1rem;">
+    <img src="assets/logo.png" alt="" style="width:28px;height:28px;border-radius:6px;"/>
+    <span class="logo-text">Flora<span style="color:var(--coral);">Chain</span></span>
+  </a>
+  <span class="hide-mobile" style="margin-left:.5rem;color:var(--text-3);font-size:.82rem;">/ Customer Portal</span>
+</div>
+<div style="height:52px;"></div>
+
+<div class="auth-layout">
+
+  <!-- ══ LEFT SIDE ══ -->
+  <div class="auth-side">
+    <!-- floating flowers bg -->
+    <div class="float-flowers" aria-hidden="true">
+      <span class="ffl" style="left:10%;animation-duration:14s;animation-delay:0s;">🌸</span>
+      <span class="ffl" style="left:28%;animation-duration:18s;animation-delay:3s;font-size:2.4rem;">🌼</span>
+      <span class="ffl" style="left:55%;animation-duration:12s;animation-delay:6s;">🌺</span>
+      <span class="ffl" style="left:75%;animation-duration:20s;animation-delay:1s;font-size:1.4rem;">⚪</span>
+      <span class="ffl" style="left:40%;animation-duration:16s;animation-delay:9s;">🪷</span>
+      <span class="ffl" style="left:85%;animation-duration:11s;animation-delay:4s;font-size:2.2rem;">🌻</span>
+    </div>
+    <div class="side-content">
+      <div>
+        <div class="side-logo">
+          <img src="assets/logo.png" alt="FloraChain"/>FloraChain
+        </div>
+        <div class="side-pill">🛍️ Customer Portal</div>
+        <div class="side-hero">
+          <div class="side-title">Shop Fresh Flowers,<br/>Delivered to You 🌸</div>
+          <div class="side-sub">Buy directly from local farmers, trusted agents and premium stores — at the freshest prices.</div>
+        </div>
+        <div class="side-features">
+          <div class="sf-row">
+            <div class="sf-ic">🌾</div>
+            <div class="sf-tx"><strong>Direct from Farmers</strong> — Skip the middleman, get farm-fresh flowers at lower prices.</div>
+          </div>
+          <div class="sf-row">
+            <div class="sf-ic">🚚</div>
+            <div class="sf-tx"><strong>Live Delivery Tracking</strong> — Watch your order travel from the farm to your doorstep.</div>
+          </div>
+          <div class="sf-row">
+            <div class="sf-ic">💳</div>
+            <div class="sf-tx"><strong>COD & Online Pay</strong> — Pay how you prefer, safely and easily.</div>
+          </div>
+          <div class="sf-row">
+            <div class="sf-ic">↩️</div>
+            <div class="sf-tx"><strong>Easy Returns</strong> — Not satisfied? Return within the policy window.</div>
+          </div>
+        </div>
+      </div>
+      <!-- Profile photo showcase -->
+      <div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+          <img src="assets/profile_customer.png" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);"/>
+          <img src="assets/profile_farmer.png" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.3);margin-left:-12px;"/>
+          <img src="assets/profile_store_owner.png" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.3);margin-left:-12px;"/>
+          <div style="margin-left:.25rem;">
+            <div style="font-size:.78rem;color:#fff;font-weight:700;">Join 12,000+ customers</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.6);">shopping on FloraChain</div>
+          </div>
+        </div>
+        <div class="side-quote">
+          <div class="sq-text">"I ordered fresh roses for my wedding directly from a farmer on FloraChain. The quality was stunning and delivery was on time — couldn't be happier!"</div>
+          <div class="sq-name">— Priya M., Customer, Chennai</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="auth-main">
+    <div class="auth-box">
+
+      <!-- Tabs -->
+      <div class="auth-tabs" id="authTabs">
+        <div class="auth-tab" id="tabLogin" onclick="showLogin()">Sign In</div>
+        <div class="auth-tab active" id="tabReg" onclick="showReg()">Create Account</div>
+      </div>
+
+      <!-- ══ SIGN IN FORM ══ -->
+      <div id="loginForm" style="display:none;">
+        <h2 style="margin-bottom:.2rem;">Welcome back! 👋</h2>
+        <p class="text-muted text-sm mb-5">Sign in to your FloraChain customer account.</p>
+
+        <!-- Social sign-in -->
+        <div style="display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.25rem;">
+          <button class="social-btn" onclick="showToast('Google sign-in coming soon!','info')">
+            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.3 29.2 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.3 29 5 24 5 12.9 5 4 13.9 4 25s8.9 20 20 20 20-8.9 20-20c0-1.5-.2-2.8-.4-4.5z"/><path fill="#FF3D00" d="M6.3 15.5l6.6 4.8C14.7 16.4 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.3 29 5 24 5 16 5 9.1 9.5 6.3 15.5z"/><path fill="#4CAF50" d="M24 45c5 0 9.5-1.9 12.9-5l-6-4.9C29.3 36.7 26.8 37.5 24 37.5c-5.1 0-9.5-2.8-11.3-6.9l-6.5 5C9.2 41 16.1 45 24 45z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6 4.9C40.2 36.1 44 31 44 25c0-1.5-.2-2.8-.4-4.5z"/></svg>
+            Continue with Google
+          </button>
+          <button class="social-btn" onclick="showToast('Phone sign-in coming soon!','info')">
+            📱 Continue with Mobile Number
+          </button>
+        </div>
+
+        <div class="divider-text">OR</div>
+
+        <div style="display:flex;flex-direction:column;gap:.85rem;margin-top:1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Email or Mobile</label>
+            <input class="form-input" type="text" id="loginId" placeholder="email@example.com or 98765 43210"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-group">
+              <input class="form-input" type="password" id="loginPwd" placeholder="Enter your password"/>
+              <button type="button" class="input-suffix" style="background:none;border:none;cursor:pointer;" onclick="togglePwd('loginPwd',this)">👁</button>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <label class="checkbox-label" style="font-size:.83rem;"><input type="checkbox"/> Remember me</label>
+            <a href="javascript:void(0)" onclick="showToast('Password reset link sent!','info')" class="text-sm" style="color:#AD1457;">Forgot password?</a>
+          </div>
+          <button class="btn-customer btn-customer-lg w-full mt-2" id="loginBtn" onclick="doLogin()">Sign In →</button>
+        </div>
+        <div class="text-center mt-4 text-sm text-muted">
+          Don't have an account? <a href="javascript:void(0)" onclick="showReg()" style="color:#AD1457;font-weight:600;">Create one →</a>
+        </div>
+        <div class="text-center mt-3 text-sm text-muted">
+          Are you a Farmer / Agent / Store?
+          <a href="auth.html?mode=login" style="color:var(--green-dark);font-weight:600;">Business Login →</a>
+        </div>
+      </div>
+
+      <!-- ══ REGISTER WIZARD ══ -->
+      <div id="regForm">
+        <h2 style="margin-bottom:.15rem;">Create your account 🌸</h2>
+        <p class="text-muted text-sm mb-4">Shop fresh flowers in 3 simple steps.</p>
+
+        <!-- Wizard bar -->
+        <div class="wiz-bar" id="wizBar">
+          <div class="wiz-step">
+            <div class="wiz-circle active" id="wc1">1</div>
+            <div class="wiz-lbl active" id="wl1">Account</div>
+          </div>
+          <div class="wiz-line" id="wline1"></div>
+          <div class="wiz-step">
+            <div class="wiz-circle" id="wc2">2</div>
+            <div class="wiz-lbl" id="wl2">Profile</div>
+          </div>
+          <div class="wiz-line" id="wline2"></div>
+          <div class="wiz-step">
+            <div class="wiz-circle" id="wc3">3</div>
+            <div class="wiz-lbl" id="wl3">Done!</div>
+          </div>
+        </div>
+
+        <!-- STEP 1: Account Credentials -->
+        <div class="reg-step active" id="step1">
+          <p class="font-semi mb-4" style="color:var(--text-2);">Create your login credentials</p>
+
+          <!-- Social signup -->
+          <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.25rem;">
+            <button class="social-btn" onclick="showToast('Google signup coming soon!','info')">
+              <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.3 29.2 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.3 29 5 24 5 12.9 5 4 13.9 4 25s8.9 20 20 20 20-8.9 20-20c0-1.5-.2-2.8-.4-4.5z"/><path fill="#FF3D00" d="M6.3 15.5l6.6 4.8C14.7 16.4 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.3 29 5 24 5 16 5 9.1 9.5 6.3 15.5z"/><path fill="#4CAF50" d="M24 45c5 0 9.5-1.9 12.9-5l-6-4.9C29.3 36.7 26.8 37.5 24 37.5c-5.1 0-9.5-2.8-11.3-6.9l-6.5 5C9.2 41 16.1 45 24 45z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6 4.9C40.2 36.1 44 31 44 25c0-1.5-.2-2.8-.4-4.5z"/></svg>
+              Sign up with Google
+            </button>
+          </div>
+          <div class="divider-text">OR</div>
+          <div style="display:flex;flex-direction:column;gap:.85rem;margin-top:1.25rem;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">First Name</label>
+                <input class="form-input" id="rFirstName" placeholder="Priya"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Last Name</label>
+                <input class="form-input" id="rLastName" placeholder="Kumar"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input class="form-input" type="email" id="rEmail" placeholder="priya@example.com"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile Number</label>
+              <div style="display:flex;gap:.5rem;">
+                <select class="form-select" style="width:90px;flex-shrink:0;"><option>🇮🇳 +91</option><option>🇦🇪 +971</option><option>🇸🇬 +65</option></select>
+                <input class="form-input" type="tel" id="rMobile" placeholder="98765 43210" style="flex:1;"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-group">
+                <input class="form-input" type="password" id="rPwd" placeholder="Minimum 8 characters" oninput="checkPwd(this.value)"/>
+                <button type="button" class="input-suffix" style="background:none;border:none;cursor:pointer;" onclick="togglePwd('rPwd',this)">👁</button>
+              </div>
+              <div class="pwd-bars" id="pwdBars"><div class="pwd-bar"></div><div class="pwd-bar"></div><div class="pwd-bar"></div><div class="pwd-bar"></div></div>
+              <div class="pwd-text text-muted" id="pwdStrengthText">Password strength</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <input class="form-input" type="password" id="rPwd2" placeholder="Re-enter password"/>
+            </div>
+            <label class="checkbox-label" style="font-size:.83rem;">
+              <input type="checkbox" id="termsCheck"/>
+              I agree to the <a href="terms.html" style="color:#AD1457;">Terms of Service</a> &amp; <a href="privacy.html" style="color:#AD1457;">Privacy Policy</a>
+            </label>
+            <div id="step1Error" class="form-error" style="display:none;"></div>
+            <button class="btn-customer btn-customer-lg w-full" onclick="goStep(2)">Continue →</button>
+          </div>
+          <div class="text-center mt-4 text-sm text-muted">
+            Already have an account? <a href="javascript:void(0)" onclick="showLogin()" style="color:#AD1457;font-weight:600;">Sign in →</a>
+          </div>
+        </div>
+
+        <!-- STEP 2: Profile & Preferences -->
+        <div class="reg-step" id="step2">
+          <p class="font-semi mb-4" style="color:var(--text-2);">Tell us a little about yourself</p>
+
+          <!-- Avatar upload -->
+          <div class="avatar-upload-wrap mb-4">
+            <img src="assets/profile_customer.png" id="avatarPreview" class="avatar-preview" onclick="document.getElementById('avatarInput').click()" title="Click to change photo"/>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="previewAvatar(this)"/>
+            <div class="text-center">
+              <button onclick="document.getElementById('avatarInput').click()" style="background:none;color:#AD1457;font-size:.8rem;font-weight:600;cursor:pointer;border:none;">📷 Change Profile Photo</button>
+              <div class="text-xs text-muted">Optional · JPG or PNG</div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Date of Birth</label>
+                <input class="form-input" type="date" id="rDob"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Gender</label>
+                <select class="form-select" id="rGender">
+                  <option value="">Select</option>
+                  <option>Female</option>
+                  <option>Male</option>
+                  <option>Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Delivery Address</label>
+              <textarea class="form-textarea" id="rAddress" rows="2" placeholder="Door No., Street, Area, City, Pincode"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">City</label>
+                <input class="form-input" id="rCity" placeholder="Chennai"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">State</label>
+                <select class="form-select" id="rState">
+                  <option>Tamil Nadu</option>
+                  <option>Karnataka</option>
+                  <option>Kerala</option>
+                  <option>Andhra Pradesh</option>
+                  <option>Maharashtra</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label mb-2" style="display:block;">🌸 Flowers you love (for personalised feed)</label>
+              <div class="flower-grid">
+                <span class="flower-chip sel" onclick="this.classList.toggle('sel')">🌸 Rose</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">⚪ Jasmine</span>
+                <span class="flower-chip sel" onclick="this.classList.toggle('sel')">🌼 Marigold</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">🪷 Lotus</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">🌺 Gerbera</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">🌻 Sunflower</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">💐 Bouquets</span>
+                <span class="flower-chip" onclick="this.classList.toggle('sel')">🏵 Garlands</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label mb-2" style="display:block;">Preferred Payment Method</label>
+              <div style="display:flex;gap:.75rem;">
+                <div class="pay-opt selected" id="popt-cod" onclick="selectPay('cod')" style="flex:1;border:2px solid #AD1457;background:#FCE4EC;border-radius:var(--radius-lg);padding:.75rem;cursor:pointer;text-align:center;transition:all var(--t-fast);">
+                  <div style="font-size:1.3rem;">💵</div>
+                  <div style="font-size:.78rem;font-weight:600;margin-top:.3rem;">Cash on Delivery</div>
+                </div>
+                <div class="pay-opt" id="popt-online" onclick="selectPay('online')" style="flex:1;border:2px solid var(--border);border-radius:var(--radius-lg);padding:.75rem;cursor:pointer;text-align:center;transition:all var(--t-fast);">
+                  <div style="font-size:1.3rem;">💳</div>
+                  <div style="font-size:.78rem;font-weight:600;margin-top:.3rem;">Online Payment</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:.75rem;flex-direction:column;">
+              <div class="toggle-wrap">
+                <div class="toggle-switch active" id="tgl-sms" onclick="this.classList.toggle('active')" style="--green:#AD1457;"></div>
+                <span class="toggle-label">SMS Notifications for orders</span>
+              </div>
+              <div class="toggle-wrap">
+                <div class="toggle-switch active" id="tgl-deliv" onclick="this.classList.toggle('active')"></div>
+                <span class="toggle-label">Delivery status alerts</span>
+              </div>
+              <div class="toggle-wrap">
+                <div class="toggle-switch" id="tgl-price" onclick="this.classList.toggle('active')"></div>
+                <span class="toggle-label">Price drop alerts for my flowers</span>
+              </div>
+            </div>
+
+            <div class="flex gap-3 mt-2">
+              <button class="btn btn-outline flex-1" onclick="goStep(1)">← Back</button>
+              <button class="btn-customer flex-1" onclick="goStep(3)">Complete Setup →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Success -->
+        <div class="reg-step" id="step3">
+          <div class="success-wrap">
+            <div class="success-circle">🎉</div>
+            <h2 class="mb-2">You're all set!</h2>
+            <p class="text-muted mb-2">Welcome to FloraChain, <strong id="welcomeName">Priya</strong>!</p>
+            <p class="text-sm text-muted mb-5">Your account has been created. Start shopping fresh flowers directly from farmers and stores.</p>
+
+            <div style="background:#FCE4EC;border:1px solid #F48FB1;border-radius:var(--radius-xl);padding:1.5rem;margin-bottom:1.5rem;text-align:left;">
+              <div class="font-semi mb-2" style="color:#AD1457;">What's next for you?</div>
+              <div class="text-sm text-muted">🌸 Browse flowers from local farmers</div>
+              <div class="text-sm text-muted mt-1">🛒 Add to cart from multiple vendors</div>
+              <div class="text-sm text-muted mt-1">🚚 Live tracking from farm to your door</div>
+              <div class="text-sm text-muted mt-1">⭐ Rate & review your purchases</div>
+            </div>
+
+            <!-- Profile summary card -->
+            <div style="display:flex;align-items:center;gap:.85rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1rem;margin-bottom:1.5rem;">
+              <img src="assets/profile_customer.png" id="successAvatar" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid #F48FB1;"/>
+              <div style="text-align:left;">
+                <div class="font-bold" id="successName">Priya Kumar</div>
+                <div class="text-xs text-muted" id="successEmail">priya@example.com</div>
+                <span class="badge" style="background:#FCE4EC;color:#AD1457;border:1px solid #F48FB1;margin-top:.35rem;">🛍️ Customer Account</span>
+              </div>
+            </div>
+
+            <button class="btn-customer btn-customer-lg w-full" onclick="window.location.href='dashboard-customer.html'">
+              🌸 Start Shopping →
+            </button>
+          </div>
+        </div>
+
+      </div><!-- end regForm -->
+    </div>
+  </div><!-- end auth-main -->
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+let currentStep = 1;
+let selectedPay = 'cod';
+
+// ── Tab switching ──────────────────────────────────────────────────
+function showLogin() {
+  document.getElementById('tabLogin').classList.add('active');
+  document.getElementById('tabReg').classList.remove('active');
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('regForm').style.display = 'none';
+}
+function showReg() {
+  document.getElementById('tabReg').classList.add('active');
+  document.getElementById('tabLogin').classList.remove('active');
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('regForm').style.display = 'block';
+}
+
+// Read URL param
+const params = new URLSearchParams(location.search);
+if(params.get('mode') === 'login') { showLogin(); } else { showReg(); }
+
+// ── Login ──────────────────────────────────────────────────────────
+function doLogin() {
+  const id = document.getElementById('loginId').value.trim();
+  const pwd = document.getElementById('loginPwd').value;
+  if (!id) { showToast('Please enter your email or mobile','warning'); return; }
+  if (!pwd) { showToast('Please enter your password','warning'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  setTimeout(() => { window.location.href = 'dashboard-customer.html'; }, 900);
+}
+
+// ── Register steps ─────────────────────────────────────────────────
+function goStep(n) {
+  if (n === 2) {
+    const fn = document.getElementById('rFirstName').value.trim();
+    const em = document.getElementById('rEmail').value.trim();
+    const pw = document.getElementById('rPwd').value;
+    const pw2 = document.getElementById('rPwd2').value;
+    const tc = document.getElementById('termsCheck').checked;
+    const err = document.getElementById('step1Error');
+    if (!fn) { err.textContent = 'Please enter your first name.'; err.style.display = 'block'; return; }
+    if (!em && !document.getElementById('rMobile').value.trim()) { err.textContent = 'Please enter your email or mobile.'; err.style.display = 'block'; return; }
+    if (pw.length < 8) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; return; }
+    if (pw !== pw2) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; return; }
+    if (!tc) { err.textContent = 'Please accept the Terms of Service.'; err.style.display = 'block'; return; }
+    err.style.display = 'none';
+  }
+  if (n === 3) {
+    // Populate success screen
+    const fn = document.getElementById('rFirstName').value.trim() || 'Priya';
+    const ln = document.getElementById('rLastName').value.trim() || '';
+    const em = document.getElementById('rEmail').value.trim() || 'your@email.com';
+    document.getElementById('welcomeName').textContent = fn;
+    document.getElementById('successName').textContent = fn + ' ' + ln;
+    document.getElementById('successEmail').textContent = em;
+    // Carry avatar if changed
+    const av = document.getElementById('avatarPreview').src;
+    document.getElementById('successAvatar').src = av;
+  }
+  document.querySelectorAll('.reg-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  updateWizBar(n); currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateWizBar(active) {
+  for (let i = 1; i <= 3; i++) {
+    const c = document.getElementById('wc' + i);
+    const l = document.getElementById('wl' + i);
+    const ln = document.getElementById('wline' + i);
+    c.classList.remove('active', 'done');
+    l.classList.remove('active', 'done');
+    if (i < active) { c.classList.add('done'); c.innerHTML = '✓'; l.classList.add('done'); if (ln) ln.classList.add('done'); }
+    if (i === active) { c.classList.add('active'); c.innerHTML = i; l.classList.add('active'); }
+    if (i > active) { c.innerHTML = i; if (ln) ln.classList.remove('done'); }
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────
+function selectPay(v) {
+  selectedPay = v;
+  const cod = document.getElementById('popt-cod');
+  const online = document.getElementById('popt-online');
+  if (v === 'cod') {
+    cod.style.borderColor = '#AD1457'; cod.style.background = '#FCE4EC';
+    online.style.borderColor = 'var(--border)'; online.style.background = '#fff';
+  } else {
+    online.style.borderColor = '#AD1457'; online.style.background = '#FCE4EC';
+    cod.style.borderColor = 'var(--border)'; cod.style.background = '#fff';
+  }
+}
+
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+function checkPwd(v) {
+  const bars = document.getElementById('pwdBars');
+  const txt = document.getElementById('pwdStrengthText');
+  bars.className = 'pwd-bars';
+  let score = 0;
+  if (v.length >= 8) score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong 💪'];
+  const colors = ['', 'var(--danger)', 'var(--warning)', 'var(--coral)', 'var(--success)'];
+  if (score > 0) {
+    bars.classList.add('strength-' + score);
+    txt.textContent = 'Strength: ' + labels[score];
+    txt.style.color = colors[score];
+  }
+}
+
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('avatarPreview').src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const icons = { success: '✅', info: 'ℹ️', warning: '⚠️', error: '❌' };
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+</script>
+</body>
+</html>

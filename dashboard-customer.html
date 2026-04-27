@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Customer Shop — FloraChain</title>
+<meta name="description" content="Shop fresh flowers directly from farmers, agents and stores on FloraChain."/>
+<link rel="stylesheet" href="assets/styles.css"/>
+<link rel="icon" href="assets/logo.png"/>
+<style>
+:root{--pink:#E91E8C;--pink-lt:#FCE4EC;--pink-glow:rgba(233,30,140,.15);}
+body{background:var(--bg);}
+/* Product grid */
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.25rem;}
+.product-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-xs);transition:all var(--t-normal);cursor:pointer;}
+.product-card:hover{box-shadow:var(--shadow-md);transform:translateY(-4px);}
+.pc-img{height:160px;display:flex;align-items:center;justify-content:center;font-size:4rem;background:linear-gradient(135deg,var(--green-xlight),var(--coral-xlight));position:relative;}
+.pc-badge{position:absolute;top:.6rem;left:.6rem;padding:.2rem .6rem;border-radius:var(--radius-full);font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.badge-farmer{background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;}
+.badge-agent{background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9;}
+.badge-store{background:#FFF3E0;color:#E65100;border:1px solid #FFCC80;}
+.pc-return{position:absolute;top:.6rem;right:.6rem;}
+.pc-body{padding:1rem;}
+.pc-name{font-weight:700;font-size:.95rem;color:var(--text);}
+.pc-meta{font-size:.75rem;color:var(--text-3);margin-top:.2rem;}
+.pc-price{font-size:1.1rem;font-weight:800;color:var(--green-dark);margin:.5rem 0;}
+.pc-add{width:100%;background:var(--coral);color:#fff;border-radius:var(--radius-full);padding:.5rem;font-size:.82rem;font-weight:700;transition:all var(--t-fast);}
+.pc-add:hover{background:var(--coral-dark);}
+/* filters */
+.filter-bar{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;}
+.filter-chip{padding:.35rem .9rem;border-radius:var(--radius-full);font-size:.78rem;font-weight:600;border:1.5px solid var(--border);cursor:pointer;transition:all var(--t-fast);background:#fff;color:var(--text-2);}
+.filter-chip:hover,.filter-chip.active{border-color:var(--green);background:var(--green-xlight);color:var(--green-dark);}
+/* cart drawer */
+.cart-drawer{position:fixed;top:0;right:-380px;width:360px;height:100vh;background:#fff;border-left:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:250;transition:right var(--t-normal);display:flex;flex-direction:column;}
+.cart-drawer.open{right:0;}
+.cart-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cart-items{flex:1;overflow-y:auto;padding:1rem 1.5rem;}
+.cart-item{display:flex;gap:.75rem;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border);}
+.ci-emoji{font-size:2rem;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:var(--radius-md);}
+.ci-name{font-weight:600;font-size:.875rem;}
+.ci-meta{font-size:.72rem;color:var(--text-3);}
+.ci-price{font-weight:700;color:var(--green-dark);margin-top:.2rem;font-size:.9rem;}
+.qty-ctrl{display:flex;align-items:center;gap:.5rem;margin-top:.35rem;}
+.qty-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;cursor:pointer;transition:all var(--t-fast);}
+.qty-btn:hover{border-color:var(--coral);color:var(--coral);}
+.qty-val{font-size:.82rem;font-weight:700;min-width:20px;text-align:center;}
+.cart-footer{padding:1.25rem 1.5rem;border-top:1px solid var(--border);}
+/* tracking */
+.track-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem;}
+/* review stars */
+.star-row{display:flex;gap:.25rem;}
+.star{font-size:1.1rem;cursor:pointer;transition:transform var(--t-fast);}
+.star:hover{transform:scale(1.2);}
+/* search */
+.shop-search{flex:1;max-width:400px;position:relative;}
+.shop-search input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-full);padding:.52rem 1rem .52rem 2.6rem;font-size:.875rem;color:var(--text);transition:all var(--t-fast);}
+.shop-search input:focus{border-color:var(--green);background:#fff;box-shadow:0 0 0 3px var(--green-glow);}
+.shop-search .si{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--text-4);pointer-events:none;}
+/* cart badge */
+.cart-btn{position:relative;}
+.cart-count{position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:var(--coral);color:#fff;border-radius:50%;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
+/* overlay */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:240;display:none;}
+.drawer-overlay.open{display:block;}
+/* checkout steps */
+.checkout-step{display:none;}
+.checkout-step.active{display:block;animation:fadeIn .3s ease;}
+.payment-opt{border:2px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;cursor:pointer;transition:all var(--t-fast);display:flex;align-items:center;gap:.75rem;}
+.payment-opt:hover,.payment-opt.selected{border-color:var(--green);background:var(--green-xlight);}
+/* vendor filter tabs */
+.vendor-tabs{display:flex;gap:.5rem;flex-wrap:wrap;}
+.vtab{padding:.3rem .85rem;border-radius:var(--radius-full);font-size:.78rem;font-weight:600;border:1.5px solid var(--border);cursor:pointer;transition:all var(--t-fast);background:#fff;}
+.vtab.active{background:var(--green);color:#fff;border-color:var(--green);}
+@media(max-width:768px){
+  .cart-drawer{width:100%;right:-100%;}
+  .shop-grid{grid-template-columns:repeat(2,1fr);gap:.75rem;}
+  .filter-bar{gap:.5rem;}
+}
+</style>
+</head>
+<body>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="logo-mark">
+      <img src="assets/logo.png" alt="FloraChain"/>
+      <span class="logo-text hide-mobile">Flora<span style="color:var(--coral)">Chain</span></span>
+    </a>
+    <div class="shop-search hide-mobile">
+      <span class="si">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search roses, marigold, jasmine…" oninput="filterProducts()"/>
+    </div>
+    <div class="flex items-center gap-3" style="margin-left:auto;">
+      <span class="live-badge hide-mobile"><span class="live-dot"></span>Market Open</span>
+      <button class="btn-icon cart-btn" id="cartBtn" onclick="toggleCart()">🛒<span class="cart-count" id="cartCount">0</span></button>
+      <div class="relative">
+        <button class="btn-icon notif-dot" onclick="document.getElementById('notifPanel').classList.toggle('open')">🔔</button>
+        <div class="notif-panel" id="notifPanel">
+          <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;">Notifications</div>
+          <div class="notif-item"><div class="notif-icon">🌸</div><div><div class="notif-text">Your order #FC-8821 is out for delivery!</div><div class="notif-time">10 mins ago</div></div></div>
+          <div class="notif-item"><div class="notif-icon">💰</div><div><div class="notif-text">Flash sale: Jasmine 20% off today only</div><div class="notif-time">1 hr ago</div></div></div>
+        </div>
+      </div>
+      <div class="avatar" onclick="openModal('profileModal')" style="background:linear-gradient(135deg,var(--pink),var(--coral));">PK</div>
+    </div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout-wrapper">
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Shop</div>
+    <a class="sidebar-item active" onclick="switchSection('shop')"><span class="s-icon">🛍️</span>Browse Flowers</a>
+    <a class="sidebar-item" onclick="switchSection('orders')"><span class="s-icon">📦</span>My Orders <span class="sidebar-badge">2</span></a>
+    <a class="sidebar-item" onclick="switchSection('track')"><span class="s-icon">🚚</span>Track Delivery</a>
+    <a class="sidebar-item" onclick="switchSection('reviews')"><span class="s-icon">⭐</span>My Reviews</a>
+    <a class="sidebar-item" onclick="switchSection('network')"><span class="s-icon">🌐</span>People (Network)</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Account</div>
+    <a class="sidebar-item" onclick="switchSection('wishlist')"><span class="s-icon">❤️</span>Wishlist <span class="sidebar-badge">5</span></a>
+    <a class="sidebar-item" onclick="switchSection('settings')"><span class="s-icon">⚙️</span>Settings</a>
+    <a class="sidebar-item" href="auth-customer.html?mode=login"><span class="s-icon">🔒</span>Sign Out</a>
+  </div>
+</nav>
+
+<main class="main-content">
+<div class="page-content">
+
+<!-- SHOP -->
+<div id="sec-shop">
+  <div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+    <div>
+      <div class="page-title">Welcome back, Priya 🌸</div>
+      <div class="page-subtitle">Fresh flowers, delivered to your door</div>
+    </div>
+    <div class="flex gap-2 hide-mobile">
+      <select class="form-select" style="width:auto;padding:.45rem 2rem .45rem .75rem;font-size:.82rem;" onchange="sortProducts(this.value)" id="sortSelect">
+        <option value="-created_at">Newest First</option>
+        <option value="price">Price: Low to High</option>
+        <option value="-price">Price: High to Low</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="vendor-tabs">
+      <span class="vtab active" onclick="filterVendor('all',this)">All Vendors</span>
+      <span class="vtab" onclick="filterVendor('farmer',this)">🌾 Farmers</span>
+      <span class="vtab" onclick="filterVendor('agent',this)">🤝 Agents</span>
+      <span class="vtab" onclick="filterVendor('store_owner',this)">🏪 Stores</span>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap;">
+      <span class="filter-chip" onclick="toggleChip(this,'returnable')">↩️ Returnable</span>
+      <span class="filter-chip" onclick="toggleChip(this,'cod')">💵 Cash on Delivery</span>
+      <span class="filter-chip" onclick="toggleChip(this,'online')">💳 Online Pay</span>
+    </div>
+    <input type="range" min="0" max="500" value="500" id="priceRange" style="width:110px;" oninput="document.getElementById('priceLabel').textContent='₹'+this.value;filterProducts()"/>
+    <span id="priceLabel" style="font-size:.78rem;font-weight:600;color:var(--green-dark);white-space:nowrap;">₹500</span>
+  </div>
+
+  <!-- Active Filters -->
+  <div id="activeFilters" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;"></div>
+
+  <!-- Product Grid -->
+  <div class="shop-grid" id="shopGrid"></div>
+</div>
+
+<!-- ═══ NETWORK ═══ -->
+<div id="sec-network" style="display:none;">
+  <div class="page-header"><div class="page-title">🌐 Universal Discovery</div><div class="page-subtitle">Search, follow, and connect with everyone across FloraChain</div></div>
+  <div class="card mb-4">
+    <div class="flex gap-3 mb-2" style="flex-wrap:wrap;">
+      <div class="input-group" style="flex:1;min-width:200px;"><span class="input-icon">🔍</span><input class="form-input" id="netSearch" placeholder="Search by name, role, or location..." oninput="renderPeople()"/></div>
+      <select class="form-select" style="width:auto;" id="netRole" onchange="renderPeople()">
+        <option value="all">All Roles</option>
+        <option value="farmer">👨‍🌾 Farmers</option>
+        <option value="agent">🤝 Agents</option>
+        <option value="store">🏪 Store Owners</option>
+        <option value="vehicle">🚛 Vehicles/Drivers</option>
+        <option value="customer">👥 Customers</option>
+      </select>
+    </div>
+  </div>
+  <div class="tabs mb-4">
+    <button class="tab-btn active" data-tab="net-all" onclick="renderPeople('all')">Discover People</button>
+    <button class="tab-btn" data-tab="net-conn" onclick="renderPeople('conn')">My Connections</button>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;" id="peopleGrid"></div>
+</div>
+
+<!-- ORDERS -->
+<div id="sec-orders" style="display:none;">
+  <div class="page-header"><div class="page-title">📦 My Orders</div><div class="page-subtitle">Track and manage your purchases</div></div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="ord-active">Active (2)</button>
+    <button class="tab-btn" data-tab="ord-past">Completed (18)</button>
+  </div>
+  <div class="tab-content active" id="ord-active">
+    <div id="activeOrdersList"></div>
+  </div>
+  <div class="tab-content" id="ord-past">
+    <div id="pastOrdersList"></div>
+  </div>
+</div>
+
+<!-- TRACK -->
+<div id="sec-track" style="display:none;">
+  <div class="page-header"><div class="page-title">🚚 Track Delivery</div></div>
+  <div class="card mb-4" style="max-width:480px;">
+    <div class="form-group">
+      <label class="form-label">Enter Tracking Code</label>
+      <div class="flex gap-2">
+        <input class="form-input" id="trackInput" placeholder="FC-XXXXXXXX" value="FC-8821KL"/>
+        <button class="btn btn-primary" onclick="showTracking()">Track</button>
+      </div>
+    </div>
+  </div>
+  <div id="trackResult" style="display:none;">
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div class="card">
+        <div class="flex justify-between items-center mb-4">
+          <div class="font-semi">Order #FC-8821KL · Rose 3kg</div>
+          <span class="badge badge-orange">Out for Delivery</span>
+        </div>
+        <div class="tracker-line">
+          <div class="tracker-event"><div class="tracker-dot done"></div><div><div class="tracker-title">✅ Order Placed</div><div class="tracker-time">28 Mar · 8:00 AM</div></div></div>
+          <div class="tracker-event"><div class="tracker-dot done"></div><div><div class="tracker-title">✅ Vendor Confirmed</div><div class="tracker-time">28 Mar · 9:15 AM · Ramesh Farm, Mysuru</div></div></div>
+          <div class="tracker-event"><div class="tracker-dot done"></div><div><div class="tracker-title">✅ Packed & Dispatched</div><div class="tracker-time">28 Mar · 11:00 AM</div></div></div>
+          <div class="tracker-event"><div class="tracker-dot active"></div><div><div class="tracker-title">🔴 Out for Delivery · 8 km away</div><div class="tracker-time">Driver: Arjun S. · ETA: 4:30 PM</div></div></div>
+          <div class="tracker-event"><div class="tracker-dot"></div><div><div class="tracker-title">⏳ Delivered</div><div class="tracker-time">Pending</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="font-semi mb-3">Driver Details</div>
+        <div class="flex gap-3 items-center mb-4">
+          <img src="assets/profile_driver.png" style="width:52px;height:52px;border-radius:50%;object-fit:cover;"/>
+          <div><div class="font-semi">Arjun Sharma</div><div class="text-xs text-muted">⭐ 4.8 · 342 trips</div></div>
+        </div>
+        <hr class="divider"/>
+        <div style="display:flex;flex-direction:column;gap:.5rem;" class="text-sm">
+          <div class="flex justify-between"><span class="text-muted">Vehicle</span><span>Mini Van · TN-09-AX-2341</span></div>
+          <div class="flex justify-between"><span class="text-muted">Distance</span><span>8 km away</span></div>
+          <div class="flex justify-between"><span class="text-muted">ETA</span><span class="font-semi" style="color:var(--green-dark);">4:30 PM</span></div>
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button class="btn btn-primary flex-1" onclick="showToast('Calling driver…','info')">📞 Call</button>
+          <button class="btn btn-outline flex-1" onclick="showToast('Chat opened','info')">💬 Chat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<div id="sec-reviews" style="display:none;">
+  <div class="page-header"><div class="page-title">⭐ My Reviews</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div class="card">
+      <div class="font-semi mb-4">Leave a Review</div>
+      <div class="form-group mb-3">
+        <label class="form-label">Order</label>
+        <select class="form-select"><option>FC-8821KL · Rose 3kg · Ramesh Farm</option><option>FC-7712AB · Marigold 2kg · Suresh Store</option></select>
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label">Review Type</label>
+        <select class="form-select"><option>Product Quality</option><option>Seller Service</option><option>Delivery Punctuality</option></select>
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label">Rating</label>
+        <div class="star-row" id="starRow">
+          <span class="star" onclick="setRating(1)">⭐</span>
+          <span class="star" onclick="setRating(2)">⭐</span>
+          <span class="star" onclick="setRating(3)">⭐</span>
+          <span class="star" onclick="setRating(4)">⭐</span>
+          <span class="star" onclick="setRating(5)">⭐</span>
+        </div>
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">Comment</label>
+        <textarea class="form-textarea" placeholder="Share your experience…"></textarea>
+      </div>
+      <button class="btn btn-primary w-full" onclick="showToast('✅ Review submitted, thank you!','success')">Submit Review</button>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-4">My Past Reviews</div>
+      <div id="myReviews"></div>
+    </div>
+  </div>
+</div>
+
+<!-- WISHLIST -->
+<div id="sec-wishlist" style="display:none;">
+  <div class="page-header"><div class="page-title">❤️ Wishlist</div></div>
+  <div class="shop-grid" id="wishlistGrid"></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="sec-settings" style="display:none;">
+  <div class="page-header"><div class="page-title">⚙️ Account Settings</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div class="card">
+      <div class="font-semi mb-4">Profile</div>
+      <div class="text-center mb-4">
+        <img src="assets/profile_customer.png" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto .75rem;border:3px solid var(--green-light);display:block;"/>
+        <div class="font-bold">Priya Krishnamurthy</div>
+        <div class="text-sm text-muted">📞 +91 98765 43210 · Chennai</div>
+      </div>
+      <div class="form-group mb-3"><label class="form-label">Full Name</label><input class="form-input" value="Priya Krishnamurthy"/></div>
+      <div class="form-group mb-3"><label class="form-label">Phone</label><input class="form-input" value="+91 98765 43210"/></div>
+      <div class="form-group mb-4"><label class="form-label">Default Delivery Address</label><textarea class="form-textarea" style="min-height:70px;">24 Anna Nagar, Chennai - 600040</textarea></div>
+      <button class="btn btn-primary w-full" onclick="showToast('Profile updated!','success')">Save Changes</button>
+    </div>
+    <div class="card">
+      <div class="font-semi mb-4">Preferences</div>
+      <div class="form-group mb-3"><label class="form-label">Preferred Payment</label><select class="form-select"><option>Cash on Delivery</option><option>Online Payment</option></select></div>
+      <div class="form-group mb-3"><label class="form-label">Favourite Flowers</label>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem;">
+          <span class="filter-chip active">🌸 Rose</span>
+          <span class="filter-chip active">⚪ Jasmine</span>
+          <span class="filter-chip">🌼 Marigold</span>
+          <span class="filter-chip">🪷 Lotus</span>
+        </div>
+      </div>
+      <hr class="divider"/>
+      <div class="toggle-wrap mb-3"><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div><span class="toggle-label">SMS Notifications</span></div>
+      <div class="toggle-wrap mb-3"><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div><span class="toggle-label">Delivery Alerts</span></div>
+      <div class="toggle-wrap"><div class="toggle-switch" onclick="this.classList.toggle('active')"></div><span class="toggle-label">Price Drop Alerts</span></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- page-content -->
+</main>
+</div><!-- layout-wrapper -->
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <div class="bottom-nav-item active" onclick="switchSection('shop')"><span class="nav-icon">🛍️</span>Shop</div>
+    <div class="bottom-nav-item" onclick="switchSection('orders')"><span class="nav-icon">📦</span>Orders</div>
+    <div class="bottom-nav-item" onclick="toggleCart()"><span class="nav-icon" style="font-size:1.8rem;background:var(--coral);width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:-6px;color:#fff;">🛒</span>Cart</div>
+    <div class="bottom-nav-item" onclick="switchSection('network')"><span class="nav-icon">🌐</span>People</div>
+    <div class="bottom-nav-item" onclick="switchSection('track')"><span class="nav-icon">🚚</span>Track</div>
+  </div>
+</nav>
+
+<!-- Cart Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <div class="font-bold text-xl">🛒 Cart <span style="font-size:.85rem;color:var(--text-3);font-weight:400;" id="cartHeaderCount"></span></div>
+    <button class="modal-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItemsList"><div class="text-center text-muted" style="padding:2rem;font-size:.9rem;">Your cart is empty 🌸<br/><small>Add flowers to get started</small></div></div>
+  <div class="cart-footer">
+    <div class="flex justify-between mb-3">
+      <span class="font-semi">Subtotal</span>
+      <span class="font-bold text-xl" style="color:var(--green-dark);" id="cartSubtotal">₹0</span>
+    </div>
+    <div class="flex justify-between mb-4 text-sm text-muted">
+      <span>Delivery</span><span class="text-green font-semi">FREE</span>
+    </div>
+    <button class="btn btn-cta btn-lg w-full" onclick="openCheckout()" id="checkoutBtn" disabled style="opacity:.5;">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header"><div class="modal-title">🌸 Checkout</div><button class="modal-close" onclick="closeModal('checkoutModal')">✕</button></div>
+    <div class="wizard-wrap mb-4">
+      <div class="wizard-steps">
+        <div class="wizard-step-wrap"><div class="step-text-wrap"><div class="step-circle active" id="s1">1</div><div class="step-label active">Address</div></div></div>
+        <div class="step-line" id="l1"></div>
+        <div class="wizard-step-wrap"><div class="step-text-wrap"><div class="step-circle" id="s2">2</div><div class="step-label">Payment</div></div></div>
+        <div class="step-line" id="l2"></div>
+        <div class="wizard-step-wrap"><div class="step-text-wrap"><div class="step-circle" id="s3">3</div><div class="step-label">Confirm</div></div></div>
+      </div>
+    </div>
+    <!-- Step 1 -->
+    <div class="checkout-step active" id="cs1">
+      <div class="form-group mb-3"><label class="form-label">Full Name</label><input class="form-input" value="Priya Krishnamurthy"/></div>
+      <div class="form-group mb-3"><label class="form-label">Phone</label><input class="form-input" value="+91 98765 43210"/></div>
+      <div class="form-group mb-4"><label class="form-label">Delivery Address</label><textarea class="form-textarea" style="min-height:70px;">24 Anna Nagar, Chennai - 600040</textarea></div>
+      <button class="btn btn-primary w-full" onclick="coStep(2)">Continue →</button>
+    </div>
+    <!-- Step 2 -->
+    <div class="checkout-step" id="cs2">
+      <div class="font-semi mb-3">Choose Payment Method</div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.5rem;">
+        <div class="payment-opt selected" id="opt-cod" onclick="selectPay('cod')"><span style="font-size:1.5rem;">💵</span><div><div class="font-semi">Cash on Delivery</div><div class="text-xs text-muted">Pay when flowers arrive</div></div></div>
+        <div class="payment-opt" id="opt-online" onclick="selectPay('online')"><span style="font-size:1.5rem;">💳</span><div><div class="font-semi">Online Payment</div><div class="text-xs text-muted">UPI / Card / Net Banking</div></div></div>
+      </div>
+      <button class="btn btn-primary w-full" onclick="coStep(3)">Continue →</button>
+    </div>
+    <!-- Step 3 -->
+    <div class="checkout-step" id="cs3">
+      <div class="card-green mb-3" style="border-radius:var(--radius-md);padding:1rem;">
+        <div class="font-semi mb-2">Order Summary</div>
+        <div id="checkoutSummary"></div>
+        <hr class="divider"/>
+        <div class="flex justify-between font-bold"><span>Total</span><span id="checkoutTotal" style="color:var(--green-dark);"></span></div>
+      </div>
+      <button class="btn btn-cta btn-lg w-full" onclick="placeOrder()">🌸 Place Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header"><div class="modal-title" id="pdTitle">Rose — Grade A Premium</div><button class="modal-close" onclick="closeModal('productModal')">✕</button></div>
+    <div style="font-size:5rem;text-align:center;padding:1.5rem;background:linear-gradient(135deg,var(--green-xlight),var(--coral-xlight));border-radius:var(--radius-lg);margin-bottom:1.5rem;" id="pdEmoji">🌸</div>
+    <div id="pdVendorBadge" style="margin-bottom:.75rem;"></div>
+    <div class="grid grid-2 gap-3 mb-4" id="pdMetaGrid"></div>
+    <div class="form-group mb-4">
+      <label class="form-label">Quantity</label>
+      <div class="flex gap-2 items-center">
+        <button class="qty-btn" onclick="pdQtyChange(-1)">−</button>
+        <span id="pdQty" style="font-weight:700;font-size:1.1rem;">1</span>
+        <button class="qty-btn" onclick="pdQtyChange(1)">+</button>
+        <span class="text-muted text-sm" id="pdUnit">kg</span>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-cta flex-1" id="pdAddBtn" onclick="addFromModal()">Add to Cart — <span id="pdPriceBtn">₹115</span></button>
+      <button class="btn btn-outline" onclick="toggleWishlist(currentProduct)" id="pdWish">❤️ Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header"><div class="modal-title">My Account</div><button class="modal-close" onclick="closeModal('profileModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <img src="assets/profile_customer.png" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto .75rem;border:3px solid var(--green-light);display:block;"/>
+      <div class="font-bold text-xl">Priya Krishnamurthy</div>
+      <div class="text-sm text-muted">🛍️ Customer · Chennai, TN</div>
+    </div>
+    <div class="flex gap-2 flex-col">
+      <button class="btn btn-primary w-full" onclick="closeModal('profileModal');switchSection('orders')">📦 My Orders</button>
+      <button class="btn btn-outline w-full" onclick="closeModal('profileModal');switchSection('settings')">⚙️ Settings</button>
+      <a href="auth-customer.html?mode=login" class="btn btn-danger-ghost w-full">🔒 Sign Out</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Profile Detail Modal -->
+<div class="modal-overlay" id="profileDetailModal" onclick="if(event.target===this) closeModal('profileDetailModal')">
+  <div class="modal" style="max-width:550px;">
+    <div class="modal-header"><div class="modal-title">👤 Profile Showcase</div><button class="modal-close" onclick="closeModal('profileDetailModal')">✕</button></div>
+    <div class="text-center mb-4">
+      <div class="avatar" style="width:72px;height:72px;font-size:1.5rem;margin:0 auto .75rem;background:linear-gradient(135deg,var(--blue),#0D47A1);" id="pdAvatar">P</div>
+      <div class="font-bold text-xl" id="pdName">Name</div>
+      <div class="text-sm text-muted"><span id="pdRole">Role</span> · <span id="pdLoc">Location</span></div>
+    </div>
+    <div style="background:#f9fafb;border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;" id="pdDetails">
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-primary flex-1" onclick="closeModal('profileDetailModal');openModal('connectModal')">🤝 Request Connection</button>
+      <button class="btn btn-outline flex-1" onclick="closeModal('profileDetailModal')">Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- Connect Modal -->
+<div class="modal-overlay" id="connectModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🤝 Send Connection Request</div><button class="modal-close" onclick="closeModal('connectModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div id="connectTarget" class="font-semi text-center pb-2 border-b border-gray">Connecting...</div>
+      <div class="form-group"><label class="form-label">Purpose of Connection</label>
+        <select class="form-select" id="connPurpose">
+          <option value="buying">Buying / Sourcing Flowers</option>
+          <option value="selling">Selling / Supplying Flowers</option>
+          <option value="transport">Booking Transport</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Requested Settlement Cycle</label>
+        <select class="form-select" id="connBilling">
+          <option value="daily">Daily Settlement</option>
+          <option value="half_month">15-Day (Half-Month)</option>
+          <option value="monthly">Monthly Settlement</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Message (Optional)</label>
+        <textarea class="form-input" id="connMsg" rows="2" placeholder="Let's do business together..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-lg w-full" onclick="confirmConnection()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Modal -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal" style="width:400px;padding:0;overflow:hidden;display:flex;flex-direction:column;height:80vh;max-height:600px;">
+    <div style="padding:1rem 1.5rem;background:var(--bg);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div class="font-semi" id="chatTitle">Direct Message</div>
+      <button class="modal-close" onclick="closeModal('chatModal')">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:1rem;background:#f9fafb;display:flex;flex-direction:column;gap:1rem;" id="chatMsgs">
+      <div class="text-center text-xs text-muted mb-2">Today</div>
+    </div>
+    <div style="padding:1rem;border-top:1px solid var(--border);background:#fff;display:flex;gap:.5rem;">
+      <input type="text" class="form-input" style="flex:1;" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()"/>
+      <button class="btn btn-primary" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/dashboard.js"></script>
+<script src="assets/network.js"></script>
+<script>
+window.sections=['shop','orders','track','network','reviews','wishlist','settings'];
+
+// ── Data ─────────────────────────────────────────────────────────
+const PRODUCTS=[
+  {id:1,emoji:'🌸',name:'Red Rose',category:'rose',grade:'Grade A — Premium',price:115,unit:'kg',qty:'80 kg',vendor:'Ramesh Kumar',vendor_role:'farmer',return_policy:'returnable',payment:'both',stock:80,desc:'Fresh farm-cut red roses, perfect for bouquets and decorations.'},
+  {id:2,emoji:'🌸',name:'Pink Rose',category:'rose',grade:'Grade B — Standard',price:85,unit:'kg',qty:'50 kg',vendor:'Suresh Agencies',vendor_role:'agent',return_policy:'non_returnable',payment:'both',stock:50,desc:'Premium pink roses sourced from Ooty farms.'},
+  {id:3,emoji:'🌼',name:'Marigold',category:'marigold',grade:'Grade A — Premium',price:43,unit:'kg',qty:'200 kg',vendor:'Devi Flower Store',vendor_role:'store_owner',return_policy:'non_returnable',payment:'cod',stock:200,desc:'Bright marigold garlands and bulk flowers for festivals.'},
+  {id:4,emoji:'⚪',name:'Jasmine',category:'jasmine',grade:'Grade A — Premium',price:265,unit:'kg',qty:'15 kg',vendor:'Velu Farm',vendor_role:'farmer',return_policy:'returnable',payment:'online',stock:15,desc:'Hand-picked jasmine, intensely fragrant.'},
+  {id:5,emoji:'🪷',name:'Lotus',category:'lotus',grade:'Grade B — Standard',price:95,unit:'dozen',qty:'100 doz',vendor:'Kavya Traders',vendor_role:'agent',return_policy:'non_returnable',payment:'both',stock:100,desc:'Temple-grade lotus flowers, sourced from local ponds.'},
+  {id:6,emoji:'🌺',name:'Gerbera',category:'gerbera',grade:'Grade A — Premium',price:16,unit:'stem',qty:'500 stems',vendor:'Priya Flower Shop',vendor_role:'store_owner',return_policy:'returnable',payment:'both',stock:500,desc:'Vibrant gerbera daisies, excellent for arrangements.'},
+  {id:7,emoji:'🌻',name:'Sunflower',category:'sunflower',grade:'Grade B — Standard',price:22,unit:'stem',qty:'300 stems',vendor:'Anbu Farm',vendor_role:'farmer',return_policy:'non_returnable',payment:'cod',stock:300,desc:'Large bright sunflowers, freshly cut.'},
+  {id:8,emoji:'💐',name:'Mixed Bouquet',category:'bouquet',grade:'Grade A — Premium',price:349,unit:'piece',qty:'40 pcs',vendor:'Roja Flower Store',vendor_role:'store_owner',return_policy:'returnable',payment:'both',stock:40,desc:'Handcrafted mixed flower bouquets, ready to gift.'},
+];
+
+const ORDERS=[
+  {id:'FC-8821KL',items:'Rose 3kg',vendor:'Ramesh Farm',date:'28 Mar',status:'out_delivery',total:'₹345',pay:'COD'},
+  {id:'FC-7712AB',items:'Marigold 2kg',vendor:'Suresh Store',date:'25 Mar',status:'delivered',total:'₹86',pay:'Online'},
+];
+
+let cart={};
+let wishlist=new Set();
+let currentProduct=null;
+let currentPdQty=1;
+let vendorFilter='all';
+let activeChips=new Set();
+let sortVal='-created_at';
+
+// ── Vendor badge helper ────────────────────────────────────────────
+function vendorBadge(role){
+  const map={farmer:{cls:'badge-farmer',label:'🌾 Sold by: Farmer'},agent:{cls:'badge-agent',label:'🤝 Sold by: Agent'},store_owner:{cls:'badge-store',label:'🏪 Sold by: Store'}};
+  const v=map[role]||{cls:'badge-grey',label:role};
+  return `<span class="badge ${v.cls}">${v.label}</span>`;
+}
+
+// ── Render products ────────────────────────────────────────────────
+function renderProducts(){
+  const maxPrice=parseInt(document.getElementById('priceRange').value);
+  const search=(document.getElementById('searchInput')||{value:''}).value.toLowerCase();
+  let filtered=PRODUCTS.filter(p=>{
+    if(vendorFilter!=='all'&&p.vendor_role!==vendorFilter)return false;
+    if(p.price>maxPrice)return false;
+    if(search&&!p.name.toLowerCase().includes(search)&&!p.category.includes(search))return false;
+    if(activeChips.has('returnable')&&p.return_policy!=='returnable')return false;
+    if(activeChips.has('cod')&&p.payment==='online')return false;
+    if(activeChips.has('online')&&p.payment==='cod')return false;
+    return true;
+  });
+  if(sortVal==='price') filtered.sort((a,b)=>a.price-b.price);
+  else if(sortVal==='-price') filtered.sort((a,b)=>b.price-a.price);
+  const grid=document.getElementById('shopGrid');
+  if(!filtered.length){grid.innerHTML='<div class="text-muted text-sm" style="grid-column:1/-1;padding:2rem 0;">No flowers match your filters 🌿</div>';return;}
+  grid.innerHTML=filtered.map(p=>`
+    <div class="product-card" onclick="openProductDetail(${p.id})">
+      <div class="pc-img">
+        ${p.emoji}
+        <span class="pc-badge ${p.vendor_role==='farmer'?'badge-farmer':p.vendor_role==='agent'?'badge-agent':'badge-store'}">${p.vendor_role==='farmer'?'🌾 Farmer':p.vendor_role==='agent'?'🤝 Agent':'🏪 Store'}</span>
+        ${p.return_policy==='returnable'?'<span class="pc-return badge badge-blue">↩ Return</span>':''}
+      </div>
+      <div class="pc-body">
+        <div class="pc-name">${p.name}</div>
+        <div class="pc-meta">${p.grade} · ${p.qty}</div>
+        <div class="pc-price">₹${p.price}/${p.unit}</div>
+        <div class="flex gap-2">
+          <button class="pc-add flex-1" onclick="event.stopPropagation();addToCart(${p.id},1)">+ Add to Cart</button>
+          <button style="background:${wishlist.has(p.id)?'#FCE4EC':'var(--surface)'};border:1.5px solid ${wishlist.has(p.id)?'#F48FB1':'var(--border)'};border-radius:50%;width:34px;height:34px;font-size:.9rem;cursor:pointer;transition:all var(--t-fast);" onclick="event.stopPropagation();toggleWishlist(${p.id})" id="wbtn${p.id}">${wishlist.has(p.id)?'❤️':'🤍'}</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterProducts(){renderProducts();}
+function sortProducts(v){sortVal=v;renderProducts();}
+function filterVendor(v,el){
+  vendorFilter=v;
+  document.querySelectorAll('.vtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderProducts();
+}
+function toggleChip(el,val){
+  el.classList.toggle('active');
+  activeChips.has(val)?activeChips.delete(val):activeChips.add(val);
+  renderProducts();
+}
+
+// ── Cart ──────────────────────────────────────────────────────────
+function addToCart(id,qty){
+  const p=PRODUCTS.find(x=>x.id===id);
+  if(!p)return;
+  cart[id]=(cart[id]||0)+qty;
+  updateCartUI();
+  showToast(`✅ ${p.name} added to cart`,'success');
+}
+function removeFromCart(id){delete cart[id];updateCartUI();}
+function changeQty(id,delta){
+  cart[id]=(cart[id]||0)+delta;
+  if(cart[id]<=0)delete cart[id];
+  updateCartUI();
+}
+function updateCartUI(){
+  const total=Object.values(cart).reduce((a,b)=>a+b,0);
+  document.getElementById('cartCount').textContent=total;
+  document.getElementById('cartHeaderCount').textContent=total?`(${total} items)`:'';
+  const subtotal=Object.entries(cart).reduce((s,[id,q])=>{const p=PRODUCTS.find(x=>x.id==id);return s+(p?p.price*q:0);},0);
+  document.getElementById('cartSubtotal').textContent='₹'+subtotal.toLocaleString('en-IN');
+  const btn=document.getElementById('checkoutBtn');
+  btn.disabled=!total;btn.style.opacity=total?'1':'0.5';
+  const list=document.getElementById('cartItemsList');
+  if(!total){list.innerHTML='<div class="text-center text-muted" style="padding:2rem;font-size:.9rem;">Your cart is empty 🌸<br/><small>Add flowers to get started</small></div>';return;}
+  list.innerHTML=Object.entries(cart).map(([id,q])=>{
+    const p=PRODUCTS.find(x=>x.id==id);if(!p)return'';
+    return `<div class="cart-item">
+      <div class="ci-emoji">${p.emoji}</div>
+      <div style="flex:1;">
+        <div class="ci-name">${p.name}</div>
+        <div class="ci-meta">${vendorBadge(p.vendor_role)}</div>
+        <div class="ci-price">₹${(p.price*q).toLocaleString('en-IN')}</div>
+        <div class="qty-ctrl">
+          <div class="qty-btn" onclick="changeQty(${id},-1)">−</div>
+          <div class="qty-val">${q}</div>
+          <div class="qty-btn" onclick="changeQty(${id},1)">+</div>
+          <span class="text-xs text-muted ml-1">${p.unit}</span>
+        </div>
+      </div>
+      <button style="background:none;color:var(--danger);font-size:1.2rem;cursor:pointer;" onclick="removeFromCart(${id})">🗑</button>
+    </div>`;
+  }).join('');
+}
+function toggleCart(){
+  document.getElementById('cartDrawer').classList.toggle('open');
+  document.getElementById('drawerOverlay').classList.toggle('open');
+}
+
+// ── Product Detail ─────────────────────────────────────────────────
+function openProductDetail(id){
+  currentProduct=id;currentPdQty=1;
+  const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
+  document.getElementById('pdTitle').textContent=`${p.name} — ${p.grade}`;
+  document.getElementById('pdEmoji').textContent=p.emoji;
+  document.getElementById('pdVendorBadge').innerHTML=vendorBadge(p.vendor_role)+` <span class="text-sm text-muted ml-2">by ${p.vendor}</span>`;
+  document.getElementById('pdMetaGrid').innerHTML=`
+    <div class="card-flat" style="padding:.75rem;background:var(--bg);border-radius:var(--radius-md);">
+      <div class="text-xs text-muted">Price</div><div class="font-bold text-lg" style="color:var(--green-dark);">₹${p.price}/${p.unit}</div>
+    </div>
+    <div class="card-flat" style="padding:.75rem;background:var(--bg);border-radius:var(--radius-md);">
+      <div class="text-xs text-muted">Available</div><div class="font-bold text-lg">${p.qty}</div>
+    </div>
+    <div class="card-flat" style="padding:.75rem;background:var(--bg);border-radius:var(--radius-md);">
+      <div class="text-xs text-muted">Return Policy</div><div class="font-bold">${p.return_policy==='returnable'?'↩ Returnable':'No Returns'}</div>
+    </div>
+    <div class="card-flat" style="padding:.75rem;background:var(--bg);border-radius:var(--radius-md);">
+      <div class="text-xs text-muted">Payment</div><div class="font-bold">${p.payment==='both'?'COD / Online':p.payment==='cod'?'COD Only':'Online Only'}</div>
+    </div>`;
+  document.getElementById('pdQty').textContent=1;
+  document.getElementById('pdUnit').textContent=p.unit;
+  document.getElementById('pdPriceBtn').textContent='₹'+p.price;
+  openModal('productModal');
+}
+function pdQtyChange(d){
+  const p=PRODUCTS.find(x=>x.id===currentProduct);if(!p)return;
+  currentPdQty=Math.max(1,currentPdQty+d);
+  document.getElementById('pdQty').textContent=currentPdQty;
+  document.getElementById('pdPriceBtn').textContent='₹'+(p.price*currentPdQty).toLocaleString('en-IN');
+}
+function addFromModal(){
+  addToCart(currentProduct,currentPdQty);
+  closeModal('productModal');
+}
+
+// ── Wishlist ────────────────────────────────────────────────────────
+function toggleWishlist(id){
+  const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
+  wishlist.has(id)?wishlist.delete(id):wishlist.add(id);
+  showToast(wishlist.has(id)?`❤️ ${p.name} saved to wishlist!`:`Removed from wishlist`,'info');
+  renderProducts();renderWishlist();
+}
+function renderWishlist(){
+  const grid=document.getElementById('wishlistGrid');
+  const items=PRODUCTS.filter(p=>wishlist.has(p.id));
+  if(!items.length){grid.innerHTML='<p class="text-muted text-sm" style="grid-column:1/-1;padding:1rem 0;">No saved items yet 🤍</p>';return;}
+  grid.innerHTML=items.map(p=>`
+    <div class="product-card">
+      <div class="pc-img">${p.emoji}<span class="pc-badge ${p.vendor_role==='farmer'?'badge-farmer':p.vendor_role==='agent'?'badge-agent':'badge-store'}">${p.vendor_role==='farmer'?'🌾 Farmer':p.vendor_role==='agent'?'🤝 Agent':'🏪 Store'}</span></div>
+      <div class="pc-body">
+        <div class="pc-name">${p.name}</div>
+        <div class="pc-meta">${p.grade}</div>
+        <div class="pc-price">₹${p.price}/${p.unit}</div>
+        <div class="flex gap-2">
+          <button class="pc-add flex-1" onclick="addToCart(${p.id},1)">+ Cart</button>
+          <button style="background:#FCE4EC;border:1.5px solid #F48FB1;border-radius:50%;width:34px;height:34px;font-size:.9rem;cursor:pointer;" onclick="toggleWishlist(${p.id})">❤️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Orders ─────────────────────────────────────────────────────────
+function renderOrders(){
+  const statusMap={placed:'Placed',confirmed:'Confirmed',packed:'Packed',dispatched:'Dispatched',out_delivery:'Out for Delivery',delivered:'Delivered',cancelled:'Cancelled'};
+  const badgeMap={out_delivery:'badge-orange',delivered:'badge-green',placed:'badge-blue',cancelled:'badge-red'};
+  const active=ORDERS.filter(o=>o.status!=='delivered');
+  const past=ORDERS.filter(o=>o.status==='delivered');
+  const makeCard=o=>`<div class="request-card">
+    <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:.5rem;">
+      <div>
+        <div class="font-semi">#${o.id} · ${o.items}</div>
+        <div class="text-xs text-muted mt-1">👤 ${o.vendor} · 📅 ${o.date} · 💳 ${o.pay}</div>
+      </div>
+      <div class="flex gap-2 items-center">
+        <span class="badge ${badgeMap[o.status]||'badge-grey'}">${statusMap[o.status]}</span>
+        <span class="font-bold" style="color:var(--green-dark);">${o.total}</span>
+        <button class="btn btn-outline btn-sm" onclick="switchSection('track')">🚚 Track</button>
+        ${o.status==='delivered'?`<button class="btn btn-primary btn-sm" onclick="switchSection('reviews')">⭐ Review</button>`:''}
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('activeOrdersList').innerHTML=active.length?active.map(makeCard).join(''):'<p class="text-muted text-sm p-4">No active orders</p>';
+  document.getElementById('pastOrdersList').innerHTML=past.length?past.map(makeCard).join(''):'<p class="text-muted text-sm p-4">No completed orders</p>';
+}
+
+// ── Reviews ─────────────────────────────────────────────────────────
+function renderReviews(){
+  const revs=[
+    {order:'FC-7712AB',item:'Marigold 2kg',type:'Product Quality',rating:5,comment:'Very fresh, great quality!',date:'26 Mar'},
+    {order:'FC-6601ZZ',item:'Rose 5kg',type:'Seller Service',rating:4,comment:'Fast response and delivery.',date:'20 Mar'},
+  ];
+  document.getElementById('myReviews').innerHTML=revs.map(r=>`
+    <div style="padding:.85rem 0;border-bottom:1px solid var(--border);">
+      <div class="flex justify-between items-center">
+        <div class="font-semi text-sm">${r.item}</div>
+        <div class="text-xs text-muted">${r.date}</div>
+      </div>
+      <div class="text-xs text-muted mb-1">${r.type} · Order #${r.order}</div>
+      <div style="color:#FFB300;font-size:.9rem;">${'⭐'.repeat(r.rating)}</div>
+      <div class="text-sm mt-1">${r.comment}</div>
+    </div>`).join('');
+}
+let selectedRating=5;
+function setRating(n){selectedRating=n;showToast(`${n}⭐ selected`,'info');}
+
+// ── Checkout ────────────────────────────────────────────────────────
+let currentStep=1;let selectedPay='cod';
+function openCheckout(){closeCart=false;openModal('checkoutModal');currentStep=1;renderCheckoutStep(1);}
+function coStep(n){
+  currentStep=n;renderCheckoutStep(n);
+  if(n===3){
+    const sub=Object.entries(cart).reduce((s,[id,q])=>{const p=PRODUCTS.find(x=>x.id==id);return s+(p?p.price*q:0);},0);
+    document.getElementById('checkoutTotal').textContent='₹'+sub.toLocaleString('en-IN');
+    document.getElementById('checkoutSummary').innerHTML=Object.entries(cart).map(([id,q])=>{
+      const p=PRODUCTS.find(x=>x.id==id);if(!p)return'';
+      return `<div class="flex justify-between text-sm mb-1"><span>${p.emoji} ${p.name} ×${q}</span><span class="font-semi">₹${(p.price*q).toLocaleString('en-IN')}</span></div>`;
+    }).join('');
+  }
+}
+function renderCheckoutStep(n){
+  document.querySelectorAll('.checkout-step').forEach((s,i)=>s.classList.toggle('active',i+1===n));
+  [1,2,3].forEach(i=>{
+    const c=document.getElementById('s'+i);
+    c.classList.toggle('done',i<n);c.classList.toggle('active',i===n);
+  });
+  [1,2].forEach(i=>document.getElementById('l'+i).classList.toggle('done',i<n));
+}
+function selectPay(v){
+  selectedPay=v;
+  document.getElementById('opt-cod').classList.toggle('selected',v==='cod');
+  document.getElementById('opt-online').classList.toggle('selected',v==='online');
+}
+function placeOrder(){
+  cart={};updateCartUI();closeModal('checkoutModal');
+  showToast('🌸 Order placed! Track it under My Orders.','success');
+  renderOrders();
+}
+
+// ── Tracking ─────────────────────────────────────────────────────────
+function showTracking(){document.getElementById('trackResult').style.display='block';}
+
+// ── Tabs (orders page) ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  renderProducts();renderOrders();renderReviews();renderWishlist();
+  document.querySelectorAll('.tabs').forEach(tb=>{
+    tb.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        tb.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const target=btn.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
+        const el=document.getElementById(target);if(el)el.classList.add('active');
+      });
+    });
+  });
+  document.getElementById('sidebarToggle')&&document.getElementById('sidebarToggle').addEventListener('click',()=>{
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('sidebarOverlay').classList.toggle('hidden');
+  });
+});
+</script>
+</body>
+</html>
